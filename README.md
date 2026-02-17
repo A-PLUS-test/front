@@ -175,6 +175,14 @@ OpenAI API는 사용량에 따라 과금됩니다. 많은 문제를 생성하거
 ### 파일 크기
 대용량 파일(50MB 이상)은 처리 시간이 오래 걸리거나 실패할 수 있습니다.
 
+## 📚 추가 문서
+
+자세한 문서는 `docs/` 폴더를 참고하세요:
+
+- **[배포 가이드](docs/README_DEPLOY.md)** - Firebase Hosting 배포 방법
+- **[커스텀 도메인](docs/CUSTOM_DOMAIN.md)** - 자신만의 도메인 연결 방법
+- **[보안 가이드](docs/SECURITY_URGENT.md)** - OpenAI API 키 보안 이슈 및 해결 방법
+
 ## 라이센스
 
 MIT License
