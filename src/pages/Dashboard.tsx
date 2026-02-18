@@ -4,7 +4,8 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
-import { FileText, Upload, BookOpen, Clock, PlayCircle, CheckCircle, FileQuestion } from 'lucide-react';
+import SimplePdfViewer from '../components/SimplePdfViewer';
+import { FileText, Upload, BookOpen, Clock, PlayCircle, CheckCircle, FileQuestion, Eye } from 'lucide-react';
 import type { Document } from '../types';
 
 interface SavedQuiz {
@@ -38,6 +39,7 @@ const Dashboard: React.FC = () => {
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
   const [vocabSets, setVocabSets] = useState<VocabSet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPdf, setSelectedPdf] = useState<{ url: string; name: string } | null>(null);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -53,11 +55,13 @@ const Dashboard: React.FC = () => {
         const docs: Document[] = [];
         docsSnapshot.forEach((doc) => {
           const data = doc.data();
-          docs.push({ 
-            id: doc.id, 
-            ...data,
-            uploadedAt: data.uploadedAt?.toDate?.() || new Date(),
-          } as Document);
+          if (data.isDeleted !== true) {
+            docs.push({ 
+              id: doc.id, 
+              ...data,
+              uploadedAt: data.uploadedAt?.toDate?.() || new Date(),
+            } as Document);
+          }
         });
         docs.sort((a, b) => {
           const dateA = a.uploadedAt instanceof Date ? a.uploadedAt : new Date(a.uploadedAt);
@@ -138,166 +142,97 @@ const Dashboard: React.FC = () => {
     return doc?.fileName || '알 수 없음';
   };
 
+  const handleViewPdf = (doc: Document) => {
+    if (doc.fileType === 'pdf') {
+      setSelectedPdf({ url: doc.fileUrl, name: doc.fileName });
+    }
+  };
+
   return (
     <Layout>
-      <div className="px-4 py-6">
+      <div className="p-8 max-w-7xl mx-auto">
         {/* 헤더 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">대시보드</h1>
-          <p className="mt-2 text-gray-600">업로드한 자료로 문제를 만들고 학습하세요</p>
+          <h1 className="text-3xl font-bold text-gray-900">내 학습 현황</h1>
+          <p className="mt-2 text-gray-600">{currentUser?.email}</p>
         </div>
 
-        {/* 통계 카드 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Link
-            to="/upload"
-            className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border-2 border-dashed border-gray-300 hover:border-blue-500"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">파일 업로드</h3>
-                <p className="mt-1 text-sm text-gray-600">새 자료 추가</p>
-              </div>
-              <Upload className="h-10 w-10 text-blue-600" />
-            </div>
-          </Link>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-700">총 문서</h3>
-                <p className="mt-1 text-3xl font-bold text-blue-600">{documents.length}</p>
-              </div>
-              <FileText className="h-10 w-10 text-blue-600" />
+        {/* 학습 진행 상황 카드 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-gray-100 rounded-lg p-6">
+            <div className="text-center">
+              <div className="text-sm text-gray-600 mb-2">진행중</div>
+              <div className="text-3xl font-bold text-blue-600">{savedQuizzes.length}/10</div>
             </div>
           </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-700">저장된 퀴즈</h3>
-                <p className="mt-1 text-3xl font-bold text-green-600">{savedQuizzes.length}</p>
-              </div>
-              <FileQuestion className="h-10 w-10 text-green-600" />
+          <div className="bg-gray-100 rounded-lg p-6">
+            <div className="text-center">
+              <div className="text-sm text-gray-600 mb-2">진행중</div>
+              <div className="text-3xl font-bold text-blue-600">0/10</div>
             </div>
           </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-700">완료한 퀴즈</h3>
-                <p className="mt-1 text-3xl font-bold text-purple-600">{quizResults.length}</p>
-              </div>
-              <CheckCircle className="h-10 w-10 text-purple-600" />
+          <div className="bg-gray-100 rounded-lg p-6">
+            <div className="text-center">
+              <div className="text-sm text-gray-600 mb-2">진행중</div>
+              <div className="text-3xl font-bold text-blue-600">0/10</div>
+            </div>
+          </div>
+          <div className="bg-gray-100 rounded-lg p-6">
+            <div className="text-center">
+              <div className="text-sm text-gray-600 mb-2">진행중</div>
+              <div className="text-3xl font-bold text-blue-600">0/10</div>
             </div>
           </div>
         </div>
 
-        {/* 저장된 퀴즈 목록 */}
-        {savedQuizzes.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm mb-8">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">저장된 퀴즈</h2>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {savedQuizzes.slice(0, 5).map((quiz) => (
-                <div key={quiz.id} className="px-6 py-4 hover:bg-gray-50 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">{quiz.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {quiz.questionsCount}문제 • {getDocumentName(quiz.documentId)}
-                    </p>
-                  </div>
-                  <Link
-                    to={`/quiz/take/${quiz.id}`}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    <PlayCircle className="h-4 w-4 mr-1" />
-                    시작하기
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 최근 퀴즈 결과 */}
-        {quizResults.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm mb-8">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">최근 결과</h2>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {quizResults.slice(0, 5).map((result) => (
+        {/* 최근에 본 퀴즈 섹션 */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">최근에 본 퀴즈</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {savedQuizzes.length === 0 ? (
+              <div className="col-span-3 bg-white rounded-lg p-8 text-center">
+                <FileQuestion className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                <p className="text-gray-500">아직 생성된 퀴즈가 없습니다</p>
+              </div>
+            ) : (
+              savedQuizzes.slice(0, 3).map((quiz) => (
                 <Link
-                  key={result.id}
-                  to={`/quiz/result/${result.id}`}
-                  className="px-6 py-4 hover:bg-gray-50 flex items-center justify-between block"
+                  key={quiz.id}
+                  to={`/quiz/take/${quiz.id}`}
+                  className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-200"
                 >
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">퀴즈 결과</h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {result.totalQuestions}문제 중 {Math.round((result.score / 100) * result.totalQuestions)}문제 정답
-                    </p>
+                  <div className="flex items-start justify-between mb-4">
+                    <h3 className="font-semibold text-gray-900 line-clamp-2">{quiz.title}</h3>
+                    {quiz.questionsCount > 0 && (
+                      <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                        진행중
+                      </span>
+                    )}
                   </div>
-                  <div className={`text-2xl font-bold ${
-                    result.score >= 80 ? 'text-green-600' : 
-                    result.score >= 60 ? 'text-yellow-600' : 
-                    'text-red-600'
-                  }`}>
-                    {result.score}점
+                  <div className="text-sm text-gray-600 mb-2">{getDocumentName(quiz.documentId)}</div>
+                  <div className="text-xs text-gray-500">
+                    {new Date().toLocaleDateString('ko-KR')}
                   </div>
                 </Link>
-              ))}
-            </div>
+              ))
+            )}
           </div>
-        )}
+        </div>
 
-        {/* 단어장 목록 */}
-        {vocabSets.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm mb-8">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">저장된 단어장</h2>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {vocabSets.slice(0, 5).map((vocab) => (
-                <Link
-                  key={vocab.id}
-                  to={`/vocabulary/${vocab.documentId}`}
-                  className="px-6 py-4 hover:bg-gray-50 flex items-center justify-between block"
-                >
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">{vocab.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {vocab.wordsCount}개 단어 • {getDocumentName(vocab.documentId)}
-                    </p>
-                  </div>
-                  <BookOpen className="h-6 w-6 text-gray-400" />
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 내 문서 리스트 */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">내 문서</h2>
-          </div>
-
-          {loading ? (
-            <div className="px-6 py-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-gray-600">불러오는 중...</p>
-            </div>
-          ) : documents.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <FileText className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">문서가 없습니다</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                학습 자료를 업로드하여 시작하세요
-              </p>
-              <div className="mt-6">
+        {/* 최근 문서 섹션 */}
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">최근 문서</h2>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            {loading ? (
+              <div className="p-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-2 text-gray-600">불러오는 중...</p>
+              </div>
+            ) : documents.length === 0 ? (
+              <div className="p-12 text-center">
+                <FileText className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                <h3 className="text-sm font-medium text-gray-900 mb-1">문서가 없습니다</h3>
+                <p className="text-sm text-gray-500 mb-4">학습 자료를 업로드하여 시작하세요</p>
                 <Link
                   to="/upload"
                   className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
@@ -306,60 +241,54 @@ const Dashboard: React.FC = () => {
                   파일 업로드
                 </Link>
               </div>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-200">
-              {documents.map((doc) => (
-                <div key={doc.id} className="px-6 py-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <FileText className="h-10 w-10 text-blue-600" />
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">{doc.fileName}</h3>
-                        <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
-                          <span className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {new Date(doc.uploadedAt).toLocaleDateString('ko-KR')}
-                          </span>
-                          <span className="uppercase">{doc.fileType}</span>
-                          {doc.isProcessed ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              처리 완료
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {documents.slice(0, 5).map((doc) => (
+                  <button
+                    key={doc.id}
+                    onClick={() => doc.fileType === 'pdf' && handleViewPdf(doc)}
+                    className="w-full p-4 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4 flex-1">
+                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-medium text-gray-900 truncate">{doc.fileName}</h3>
+                          <div className="flex items-center space-x-3 mt-1">
+                            <span className="text-xs text-gray-500">
+                              퀴즈 2개 • 핵심단어 30개
                             </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              처리 중
+                            <span className="text-xs text-gray-400">
+                              {new Date(doc.uploadedAt).toLocaleDateString('ko-KR')}
                             </span>
-                          )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    {doc.isProcessed && (
                       <div className="flex items-center space-x-2">
-                        <Link
-                          to={`/quiz/settings/${doc.id}`}
-                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                        >
-                          문제 만들기
-                        </Link>
-                        {doc.language === 'en' && (
-                          <Link
-                            to={`/vocabulary/${doc.id}`}
-                            className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                          >
-                            단어 학습
-                          </Link>
+                        {doc.fileType === 'pdf' && (
+                          <div className="p-2 text-gray-400">
+                            <Eye className="h-5 w-5" />
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {selectedPdf && (
+        <SimplePdfViewer
+          fileUrl={selectedPdf.url}
+          fileName={selectedPdf.name}
+          onClose={() => setSelectedPdf(null)}
+        />
+      )}
     </Layout>
   );
 };

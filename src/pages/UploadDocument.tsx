@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { db, storage } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
-import { Upload, File, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, File, X, CheckCircle, AlertCircle, FolderOpen } from 'lucide-react';
 import { processFile, getFileType } from '../utils/fileProcessor';
+import type { Folder } from '../types';
 
 const UploadDocument: React.FC = () => {
   const { currentUser } = useAuth();
@@ -17,6 +18,39 @@ const UploadDocument: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<string>('');
+
+  useEffect(() => {
+    fetchFolders();
+  }, [currentUser]);
+
+  const fetchFolders = async () => {
+    if (!currentUser) return;
+
+    try {
+      const foldersQuery = query(
+        collection(db, 'folders'),
+        where('userId', '==', currentUser.uid)
+      );
+      const foldersSnapshot = await getDocs(foldersQuery);
+      const fetchedFolders: Folder[] = [];
+      foldersSnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.isDeleted !== true) {
+          fetchedFolders.push({
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date(),
+          } as Folder);
+        }
+      });
+      setFolders(fetchedFolders);
+    } catch (error) {
+      console.error('폴더 불러오기 실패:', error);
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,18 +73,15 @@ const UploadDocument: React.FC = () => {
       setUploading(true);
       setError('');
 
-      // 1. 파일 처리 (텍스트 추출)
       setProcessing(true);
       const extractedContent = await processFile(selectedFile);
       setProcessing(false);
 
-      // 2. Firebase Storage에 파일 업로드
       const fileRef = ref(storage, `documents/${currentUser.uid}/${Date.now()}_${selectedFile.name}`);
       await uploadBytes(fileRef, selectedFile);
       const fileUrl = await getDownloadURL(fileRef);
 
-      // 3. Firestore에 문서 정보 저장
-      const docData = {
+      const docData: any = {
         userId: currentUser.uid,
         fileName: selectedFile.name,
         fileType: getFileType(selectedFile),
@@ -61,13 +92,18 @@ const UploadDocument: React.FC = () => {
         language: extractedContent.language,
         extractedText: extractedContent.text,
         pages: extractedContent.pages,
+        isDeleted: false,
       };
+
+      if (selectedFolder) {
+        docData.folderId = selectedFolder;
+      }
 
       await addDoc(collection(db, 'documents'), docData);
 
       setSuccess(true);
       setTimeout(() => {
-        navigate('/');
+        navigate('/documents');
       }, 2000);
 
     } catch (err: any) {
@@ -101,7 +137,6 @@ const UploadDocument: React.FC = () => {
     <Layout>
       <div className="px-4 py-6">
         <div className="max-w-3xl mx-auto">
-          {/* 헤더 */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">파일 업로드</h1>
             <p className="mt-2 text-gray-600">
@@ -109,17 +144,36 @@ const UploadDocument: React.FC = () => {
             </p>
           </div>
 
-          {/* 업로드 영역 */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             {success ? (
               <div className="text-center py-12">
                 <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
                 <h3 className="mt-4 text-lg font-medium text-gray-900">업로드 완료!</h3>
-                <p className="mt-2 text-gray-600">대시보드로 이동합니다...</p>
+                <p className="mt-2 text-gray-600">자료 페이지로 이동합니다...</p>
               </div>
             ) : (
               <>
-                {/* 드래그 앤 드롭 영역 */}
+                {folders.length > 0 && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <FolderOpen className="inline h-4 w-4 mr-1" />
+                      폴더 선택 (선택사항)
+                    </label>
+                    <select
+                      value={selectedFolder}
+                      onChange={(e) => setSelectedFolder(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">무제 폴더</option>
+                      {folders.map((folder) => (
+                        <option key={folder.id} value={folder.id}>
+                          {folder.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
@@ -171,7 +225,6 @@ const UploadDocument: React.FC = () => {
                   )}
                 </div>
 
-                {/* 에러 메시지 */}
                 {error && (
                   <div className="mt-4 rounded-md bg-red-50 p-4">
                     <div className="flex">
@@ -181,7 +234,6 @@ const UploadDocument: React.FC = () => {
                   </div>
                 )}
 
-                {/* 안내 사항 */}
                 <div className="mt-6 bg-blue-50 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-blue-900">안내 사항</h3>
                   <ul className="mt-2 text-sm text-blue-800 space-y-1 list-disc list-inside">
@@ -192,7 +244,6 @@ const UploadDocument: React.FC = () => {
                   </ul>
                 </div>
 
-                {/* 업로드 버튼 */}
                 <div className="mt-6 flex justify-end space-x-3">
                   <button
                     onClick={() => navigate('/')}

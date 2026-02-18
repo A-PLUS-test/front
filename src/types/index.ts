@@ -45,6 +45,20 @@ export interface Document {
   processedAt?: Date;
   isProcessed: boolean;
   language?: 'ko' | 'en' | 'other';
+  folderId?: string;
+  isDeleted?: boolean;
+  deletedAt?: Date;
+}
+
+// 폴더 타입
+export interface Folder {
+  id: string;
+  userId: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isDeleted?: boolean;
+  deletedAt?: Date;
 }
 
 // 퀴즈 세트 타입
