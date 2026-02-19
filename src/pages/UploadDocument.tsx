@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { db, storage } from '../lib/firebase';
@@ -12,6 +12,8 @@ import type { Folder } from '../types';
 const UploadDocument: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preselectedFolderId = searchParams.get('folderId');
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -19,11 +21,28 @@ const UploadDocument: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [folders, setFolders] = useState<Folder[]>([]);
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
   const [selectedFolder, setSelectedFolder] = useState<string>('');
 
   useEffect(() => {
     fetchFolders();
   }, [currentUser]);
+
+  // 폴더 목록을 불러온 후 사전 선택된 폴더가 있으면 설정
+  useEffect(() => {
+    if (preselectedFolderId && folders.length > 0) {
+      // 'default' 폴더이거나, 실제 존재하는 폴더인지 확인
+      if (preselectedFolderId === 'default') {
+        setSelectedFolder('');
+      } else {
+        const folderExists = folders.some(f => f.id === preselectedFolderId);
+        if (folderExists) {
+          setSelectedFolder(preselectedFolderId);
+        }
+      }
+    }
+  }, [preselectedFolderId, folders]);
 
   const fetchFolders = async () => {
     if (!currentUser) return;
@@ -49,6 +68,45 @@ const UploadDocument: React.FC = () => {
       setFolders(fetchedFolders);
     } catch (error) {
       console.error('폴더 불러오기 실패:', error);
+    }
+  };
+
+  const createFolder = async () => {
+    if (!currentUser || !newFolderName.trim()) return;
+
+    try {
+      const trimmedName = newFolderName.trim();
+      
+      // "기본 폴더" 이름 체크
+      if (trimmedName.toLowerCase() === '기본 폴더') {
+        alert('"기본 폴더"는 시스템 예약 이름입니다. 다른 이름을 사용해주세요.');
+        return;
+      }
+      
+      // 중복된 폴더 이름 체크
+      const duplicateFolder = folders.find(
+        f => f.name.toLowerCase() === trimmedName.toLowerCase()
+      );
+      
+      if (duplicateFolder) {
+        alert('이미 같은 이름의 폴더가 존재합니다.');
+        return;
+      }
+      
+      const docRef = await addDoc(collection(db, 'folders'), {
+        userId: currentUser.uid,
+        name: trimmedName,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isDeleted: false,
+        isFavorite: false,
+      });
+      setNewFolderName('');
+      setShowNewFolderInput(false);
+      setSelectedFolder(docRef.id);
+      fetchFolders();
+    } catch (error) {
+      console.error('폴더 생성 실패:', error);
     }
   };
 
@@ -142,6 +200,17 @@ const UploadDocument: React.FC = () => {
             <p className="mt-2 text-gray-600">
               학습 자료를 업로드하여 문제와 단어 사전을 생성하세요
             </p>
+            {preselectedFolderId && (
+              <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                <FolderOpen className="h-4 w-4 mr-1" />
+                {preselectedFolderId === 'default' 
+                  ? '기본 폴더에 저장됩니다' 
+                  : folders.find(f => f.id === preselectedFolderId)?.name 
+                    ? `"${folders.find(f => f.id === preselectedFolderId)?.name}" 폴더에 저장됩니다`
+                    : '선택된 폴더에 저장됩니다'
+                }
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6">
@@ -164,13 +233,39 @@ const UploadDocument: React.FC = () => {
                       onChange={(e) => setSelectedFolder(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">무제 폴더</option>
+                      <option value="">기본 폴더</option>
                       {folders.map((folder) => (
                         <option key={folder.id} value={folder.id}>
                           {folder.name}
                         </option>
                       ))}
                     </select>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewFolderInput(!showNewFolderInput)}
+                      className="mt-2 text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      + 새 폴더 만들기
+                    </button>
+                    {showNewFolderInput && (
+                      <div className="mt-2 flex space-x-2">
+                        <input
+                          type="text"
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && createFolder()}
+                          placeholder="폴더 이름"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          autoFocus
+                        />
+                        <button
+                          onClick={createFolder}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        >
+                          생성
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 

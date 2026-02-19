@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { LogOut, Home, Upload, FolderOpen, Trash2, ChevronDown, ChevronRight, Folder } from 'lucide-react';
+import { LogOut, Home, Upload, FolderOpen, Trash2, ChevronDown, ChevronRight, Folder, Star } from 'lucide-react';
 import type { Folder as FolderType } from '../types';
 
 interface LayoutProps {
@@ -15,11 +15,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [folders, setFolders] = useState<FolderType[]>([]);
-  const [isFoldersOpen, setIsFoldersOpen] = useState(false);
+  const [isFoldersOpen, setIsFoldersOpen] = useState(() => {
+    const saved = localStorage.getItem('foldersOpen');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
 
   useEffect(() => {
     fetchFolders();
-  }, [currentUser]);
+  }, [currentUser, location.pathname]);
+
+  useEffect(() => {
+    localStorage.setItem('foldersOpen', JSON.stringify(isFoldersOpen));
+  }, [isFoldersOpen]);
 
   const fetchFolders = async () => {
     if (!currentUser) return;
@@ -54,6 +63,49 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       navigate('/login');
     } catch (error) {
       console.error('로그아웃 실패:', error);
+    }
+  };
+
+  const createFolder = async () => {
+    if (!currentUser || !newFolderName.trim()) return;
+
+    try {
+      // 중복된 폴더 이름 체크
+      const duplicateFolder = folders.find(
+        f => f.name.toLowerCase() === newFolderName.trim().toLowerCase()
+      );
+      
+      if (duplicateFolder) {
+        alert('이미 같은 이름의 폴더가 존재합니다.');
+        return;
+      }
+
+      await addDoc(collection(db, 'folders'), {
+        userId: currentUser.uid,
+        name: newFolderName.trim(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isDeleted: false,
+        isFavorite: false,
+      });
+      setNewFolderName('');
+      setShowNewFolderInput(false);
+      fetchFolders();
+    } catch (error) {
+      console.error('폴더 생성 실패:', error);
+    }
+  };
+
+  const toggleFavorite = async (folderId: string, currentFavorite: boolean) => {
+    try {
+      const folderRef = doc(db, 'folders', folderId);
+      await updateDoc(folderRef, {
+        isFavorite: !currentFavorite,
+        updatedAt: serverTimestamp(),
+      });
+      fetchFolders();
+    } catch (error) {
+      console.error('즐겨찾기 변경 실패:', error);
     }
   };
 
@@ -114,22 +166,78 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {isFoldersOpen && (
               <div className="ml-4 mt-1 space-y-1">
                 <Link
-                  to="/documents?folder=default"
+                  to="/documents"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <FolderOpen className="h-4 w-4" />
+                  <span>전체 보기</span>
+                </Link>
+                <Link
+                  to="/folder/default"
                   className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
                 >
                   <Folder className="h-4 w-4" />
-                  <span>무제 폴더</span>
+                  <span>기본 폴더</span>
                 </Link>
-                {folders.map((folder) => (
-                  <Link
-                    key={folder.id}
-                    to={`/documents?folder=${folder.id}`}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
-                  >
-                    <Folder className="h-4 w-4" />
-                    <span className="truncate">{folder.name}</span>
-                  </Link>
+                {folders.sort((a, b) => {
+                  // 즐겨찾기 폴더를 먼저 배치
+                  if (a.isFavorite && !b.isFavorite) return -1;
+                  if (!a.isFavorite && b.isFavorite) return 1;
+                  return a.name.localeCompare(b.name);
+                }).map((folder) => (
+                  <div key={folder.id} className="flex items-center">
+                    <Link
+                      to={`/folder/${folder.id}`}
+                      className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors flex-1"
+                    >
+                      <Folder className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{folder.name}</span>
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleFavorite(folder.id, folder.isFavorite || false);
+                      }}
+                      className="p-1 mr-2"
+                      title={folder.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                    >
+                      <Star 
+                        className={`h-4 w-4 ${folder.isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`}
+                      />
+                    </button>
+                  </div>
                 ))}
+                <button
+                  onClick={() => setShowNewFolderInput(true)}
+                  className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                >
+                  <span className="text-lg">+</span>
+                  <span>새 폴더</span>
+                </button>
+                {showNewFolderInput && (
+                  <div className="px-4 py-2">
+                    <input
+                      type="text"
+                      value={newFolderName}
+                      onChange={(e) => setNewFolderName(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') createFolder();
+                        if (e.key === 'Escape') {
+                          setShowNewFolderInput(false);
+                          setNewFolderName('');
+                        }
+                      }}
+                      onBlur={() => {
+                        if (!newFolderName.trim()) {
+                          setShowNewFolderInput(false);
+                        }
+                      }}
+                      placeholder="폴더 이름"
+                      className="w-full px-2 py-1 text-sm border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      autoFocus
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>

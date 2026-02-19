@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,15 +11,19 @@ import {
   FileText, 
   FolderPlus, 
   Edit2, 
-  Trash2, 
-  MoreVertical,
-  Eye,
-  FolderInput
+  Trash2,
+  FolderInput,
+  Folder as FolderIcon,
+  Star,
+  FileQuestion,
+  BookOpen,
+  Plus
 } from 'lucide-react';
-import type { Document, Folder } from '../types';
+import type { Document, Folder, QuizSet, VocabularySet } from '../types';
 
 const Documents: React.FC = () => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const selectedFolderId = searchParams.get('folder');
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -27,28 +31,17 @@ const Documents: React.FC = () => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['default']));
   const [loading, setLoading] = useState(true);
   const [selectedPdf, setSelectedPdf] = useState<{ url: string; name: string } | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ 
-    show: boolean; 
-    x: number; 
-    y: number; 
-    type: 'folder' | 'file'; 
-    id: string;
-    name: string;
-  } | null>(null);
   const [editingItem, setEditingItem] = useState<{ id: string; name: string; type: 'folder' | 'file' } | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   const [showNewFolderInput, setShowNewFolderInput] = useState(false);
   const [movingFile, setMovingFile] = useState<{ id: string; currentFolderId?: string } | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
-
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setContextMenu(null);
-    };
-    
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
+  const [showNewFolderInModal, setShowNewFolderInModal] = useState(false);
+  const [newFolderNameInModal, setNewFolderNameInModal] = useState('');
+  const [quizSets, setQuizSets] = useState<QuizSet[]>([]);
+  const [vocabularySets, setVocabularySets] = useState<VocabularySet[]>([]);
+  const [showQuizListModal, setShowQuizListModal] = useState(false);
+  const [selectedDocForQuizList, setSelectedDocForQuizList] = useState<Document | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -104,6 +97,40 @@ const Documents: React.FC = () => {
         }
       });
       setDocuments(fetchedDocs);
+
+      // 퀴즈 세트 가져오기
+      const quizQuery = query(
+        collection(db, 'quizzes'),
+        where('userId', '==', currentUser.uid)
+      );
+      const quizSnapshot = await getDocs(quizQuery);
+      const fetchedQuizSets: QuizSet[] = [];
+      quizSnapshot.forEach((doc) => {
+        const data = doc.data();
+        fetchedQuizSets.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.() || new Date(),
+        } as QuizSet);
+      });
+      setQuizSets(fetchedQuizSets);
+
+      // 단어장 세트 가져오기
+      const vocabQuery = query(
+        collection(db, 'vocabularySets'),
+        where('userId', '==', currentUser.uid)
+      );
+      const vocabSnapshot = await getDocs(vocabQuery);
+      const fetchedVocabSets: VocabularySet[] = [];
+      vocabSnapshot.forEach((doc) => {
+        const data = doc.data();
+        fetchedVocabSets.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.() || new Date(),
+        } as VocabularySet);
+      });
+      setVocabularySets(fetchedVocabSets);
     } catch (error) {
       console.error('데이터 불러오기 실패:', error);
     } finally {
@@ -125,18 +152,50 @@ const Documents: React.FC = () => {
     if (!currentUser || !newFolderName.trim()) return;
 
     try {
+      const trimmedName = newFolderName.trim();
+      
+      // "기본 폴더" 이름 체크
+      if (trimmedName.toLowerCase() === '기본 폴더') {
+        alert('"기본 폴더"는 시스템 예약 이름입니다. 다른 이름을 사용해주세요.');
+        return;
+      }
+      
+      // 중복된 폴더 이름 체크
+      const duplicateFolder = folders.find(
+        f => f.name.toLowerCase() === trimmedName.toLowerCase()
+      );
+      
+      if (duplicateFolder) {
+        alert('이미 같은 이름의 폴더가 존재합니다.');
+        return;
+      }
+
       await addDoc(collection(db, 'folders'), {
         userId: currentUser.uid,
-        name: newFolderName.trim(),
+        name: trimmedName,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         isDeleted: false,
+        isFavorite: false,
       });
       setNewFolderName('');
       setShowNewFolderInput(false);
-      fetchData();
+      await fetchData();
     } catch (error) {
       console.error('폴더 생성 실패:', error);
+    }
+  };
+
+  const toggleFavorite = async (folderId: string, currentFavorite: boolean) => {
+    try {
+      const folderRef = doc(db, 'folders', folderId);
+      await updateDoc(folderRef, {
+        isFavorite: !currentFavorite,
+        updatedAt: serverTimestamp(),
+      });
+      await fetchData();
+    } catch (error) {
+      console.error('즐겨찾기 변경 실패:', error);
     }
   };
 
@@ -144,11 +203,34 @@ const Documents: React.FC = () => {
     if (!editingItem || !editingItem.name.trim()) return;
 
     try {
+      const trimmedName = editingItem.name.trim();
       const collectionName = editingItem.type === 'folder' ? 'folders' : 'documents';
       const fieldName = editingItem.type === 'folder' ? 'name' : 'fileName';
       
-      await updateDoc(doc(db, collectionName, editingItem.id), {
-        [fieldName]: editingItem.name.trim(),
+      // 폴더 이름 변경인 경우에만 검증
+      if (editingItem.type === 'folder') {
+        // "기본 폴더" 이름 체크
+        if (trimmedName.toLowerCase() === '기본 폴더') {
+          alert('"기본 폴더"는 시스템 예약 이름입니다. 다른 이름을 사용해주세요.');
+          setEditingItem(null);
+          return;
+        }
+        
+        // 중복된 폴더 이름 체크 (자기 자신은 제외)
+        const duplicateFolder = folders.find(
+          f => f.id !== editingItem.id && f.name.toLowerCase() === trimmedName.toLowerCase()
+        );
+        
+        if (duplicateFolder) {
+          alert('이미 같은 이름의 폴더가 존재합니다.');
+          setEditingItem(null);
+          return;
+        }
+      }
+      
+      const docRef = doc(db, collectionName, editingItem.id);
+      await updateDoc(docRef, {
+        [fieldName]: trimmedName,
         updatedAt: serverTimestamp(),
       });
       
@@ -173,8 +255,9 @@ const Documents: React.FC = () => {
       
       if (type === 'folder') {
         const folderDocs = documents.filter(d => d.folderId === id);
-        for (const doc of folderDocs) {
-          await updateDoc(doc(db, 'documents', doc.id), {
+        for (const document of folderDocs) {
+          const docRef = doc(db, 'documents', document.id);
+          await updateDoc(docRef, {
             isDeleted: true,
             deletedAt: serverTimestamp(),
           });
@@ -187,17 +270,9 @@ const Documents: React.FC = () => {
     }
   };
 
-  const handleContextMenu = (e: React.MouseEvent, type: 'folder' | 'file', id: string, name: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setContextMenu({
-      show: true,
-      x: e.clientX,
-      y: e.clientY,
-      type,
-      id,
-      name,
-    });
+  const handleContextMenu = (_e: React.MouseEvent, _type: 'folder' | 'file', _id: string, _name: string) => {
+    _e.preventDefault();
+    _e.stopPropagation();
   };
 
   const handleViewPdf = (doc: Document) => {
@@ -210,7 +285,8 @@ const Documents: React.FC = () => {
     if (!movingFile) return;
 
     try {
-      await updateDoc(doc(db, 'documents', movingFile.id), {
+      const docRef = doc(db, 'documents', movingFile.id);
+      await updateDoc(docRef, {
         folderId: targetFolderId || null,
         updatedAt: serverTimestamp(),
       });
@@ -223,8 +299,78 @@ const Documents: React.FC = () => {
     }
   };
 
+  const createFolderInModal = async () => {
+    if (!currentUser || !newFolderNameInModal.trim()) return;
+
+    try {
+      const trimmedName = newFolderNameInModal.trim();
+      
+      // "기본 폴더" 이름 체크
+      if (trimmedName.toLowerCase() === '기본 폴더') {
+        alert('"기본 폴더"는 시스템 예약 이름입니다. 다른 이름을 사용해주세요.');
+        return;
+      }
+      
+      // 중복된 폴더 이름 체크
+      const duplicateFolder = folders.find(
+        f => f.name.toLowerCase() === trimmedName.toLowerCase()
+      );
+      
+      if (duplicateFolder) {
+        alert('이미 같은 이름의 폴더가 존재합니다.');
+        return;
+      }
+
+      const docRef = await addDoc(collection(db, 'folders'), {
+        userId: currentUser.uid,
+        name: trimmedName,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isDeleted: false,
+        isFavorite: false,
+      });
+      setNewFolderNameInModal('');
+      setShowNewFolderInModal(false);
+      await fetchData();
+      if (movingFile) {
+        await moveFile(docRef.id);
+      }
+    } catch (error) {
+      console.error('폴더 생성 실패:', error);
+    }
+  };
+
   const getDocumentsByFolder = (folderId?: string) => {
     return documents.filter(doc => doc.folderId === folderId);
+  };
+
+  const getQuizSetsForDocument = (documentId: string) => {
+    return quizSets.filter(quiz => quiz.documentId === documentId);
+  };
+
+  const getVocabularySetsForDocument = (documentId: string) => {
+    return vocabularySets.filter(vocab => vocab.documentId === documentId);
+  };
+
+  const handleCreateQuiz = (doc: Document) => {
+    navigate(`/quiz/settings/${doc.id}`);
+  };
+
+  const handleCreateVocabulary = (doc: Document) => {
+    navigate(`/vocabulary/${doc.id}`);
+  };
+
+  const handleViewQuizzes = (doc: Document) => {
+    setSelectedDocForQuizList(doc);
+    setShowQuizListModal(true);
+  };
+
+  const handleViewVocabulary = (doc: Document) => {
+    navigate(`/vocabulary/${doc.id}`);
+  };
+
+  const handleViewQuiz = (quizSetId: string) => {
+    navigate(`/quiz/take/${quizSetId}`);
   };
 
   const defaultFolderDocs = getDocumentsByFolder(undefined);
@@ -295,8 +441,8 @@ const Documents: React.FC = () => {
                   ) : (
                     <ChevronRight className="h-5 w-5 text-gray-600" />
                   )}
-                  <FileText className="h-5 w-5 text-gray-600" />
-                  <span className="font-medium text-gray-900">무제 폴더</span>
+                  <FolderIcon className="h-5 w-5 text-gray-600" />
+                  <span className="font-medium text-gray-900">기본 폴더</span>
                   <span className="text-sm text-gray-500">({defaultFolderDocs.length})</span>
                 </div>
               </div>
@@ -308,7 +454,11 @@ const Documents: React.FC = () => {
                       파일이 없습니다
                     </div>
                   ) : (
-                    defaultFolderDocs.map((doc) => (
+                    defaultFolderDocs.map((doc) => {
+                      const docQuizSets = getQuizSetsForDocument(doc.id);
+                      const docVocabSets = getVocabularySetsForDocument(doc.id);
+                      
+                      return (
                       <div
                         key={doc.id}
                         className="flex items-center justify-between p-4 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
@@ -335,15 +485,6 @@ const Documents: React.FC = () => {
                               <span className="text-xs text-gray-500 uppercase">{doc.fileType}</span>
                             </button>
                             <div className="flex items-center space-x-2">
-                              {doc.fileType === 'pdf' && (
-                                <button
-                                  onClick={() => handleViewPdf(doc)}
-                                  className="p-2 text-gray-600 hover:bg-gray-100 rounded"
-                                  title="미리보기"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </button>
-                              )}
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -375,17 +516,64 @@ const Documents: React.FC = () => {
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
+                              {doc.fileType === 'pdf' && (
+                                <>
+                                  {docQuizSets.length > 0 ? (
+                                    <button
+                                      onClick={() => handleViewQuizzes(doc)}
+                                      className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded border border-green-200"
+                                      title="문제 보기"
+                                    >
+                                      <FileQuestion className="h-4 w-4 inline mr-1" />
+                                      문제 보기 ({docQuizSets.length})
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleCreateQuiz(doc)}
+                                      className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200"
+                                      title="문제 만들기"
+                                    >
+                                      <FileQuestion className="h-4 w-4 inline mr-1" />
+                                      문제 만들기
+                                    </button>
+                                  )}
+                                  {docVocabSets.length > 0 ? (
+                                    <button
+                                      onClick={() => handleViewVocabulary(doc)}
+                                      className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
+                                      title="단어장 보기"
+                                    >
+                                      <BookOpen className="h-4 w-4 inline mr-1" />
+                                      단어장 보기
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleCreateVocabulary(doc)}
+                                      className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
+                                      title="단어장 만들기"
+                                    >
+                                      <BookOpen className="h-4 w-4 inline mr-1" />
+                                      단어장 만들기
+                                    </button>
+                                  )}
+                                </>
+                              )}
                             </div>
                           </>
                         )}
                       </div>
-                    ))
+                    )})
                   )}
                 </div>
               )}
             </div>
 
-            {folders.map((folder) => {
+            {folders.sort((a, b) => {
+              // 즐겨찾기 폴더를 먼저 배치
+              if (a.isFavorite && !b.isFavorite) return -1;
+              if (!a.isFavorite && b.isFavorite) return 1;
+              return a.name.localeCompare(b.name);
+            }).map((folder) => {
               const folderDocs = getDocumentsByFolder(folder.id);
               
               return (
@@ -401,7 +589,7 @@ const Documents: React.FC = () => {
                       ) : (
                         <ChevronRight className="h-5 w-5 text-gray-600" />
                       )}
-                      <FileText className="h-5 w-5 text-blue-600" />
+                      <FolderIcon className="h-5 w-5 text-blue-600" />
                       {editingItem?.id === folder.id ? (
                         <input
                           type="text"
@@ -421,6 +609,16 @@ const Documents: React.FC = () => {
                       )}
                     </div>
                     <div className="flex items-center space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(folder.id, folder.isFavorite || false);
+                        }}
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded"
+                        title={folder.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                      >
+                        <Star className={`h-4 w-4 ${folder.isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} />
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -451,7 +649,11 @@ const Documents: React.FC = () => {
                           파일이 없습니다
                         </div>
                       ) : (
-                        folderDocs.map((doc) => (
+                        folderDocs.map((doc) => {
+                          const docQuizSets = getQuizSetsForDocument(doc.id);
+                          const docVocabSets = getVocabularySetsForDocument(doc.id);
+                          
+                          return (
                           <div
                             key={doc.id}
                             className="flex items-center justify-between p-4 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
@@ -478,15 +680,17 @@ const Documents: React.FC = () => {
                                   <span className="text-xs text-gray-500 uppercase">{doc.fileType}</span>
                                 </button>
                                 <div className="flex items-center space-x-2">
-                                  {doc.fileType === 'pdf' && (
-                                    <button
-                                      onClick={() => handleViewPdf(doc)}
-                                      className="p-2 text-gray-600 hover:bg-gray-100 rounded"
-                                      title="미리보기"
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                    </button>
-                                  )}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setMovingFile({ id: doc.id, currentFolderId: doc.folderId });
+                                      setShowMoveModal(true);
+                                    }}
+                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded"
+                                    title="이동"
+                                  >
+                                    <FolderInput className="h-4 w-4" />
+                                  </button>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -507,11 +711,53 @@ const Documents: React.FC = () => {
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </button>
+                                  {doc.fileType === 'pdf' && (
+                                    <>
+                                      {docQuizSets.length > 0 ? (
+                                        <button
+                                          onClick={() => handleViewQuizzes(doc)}
+                                          className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded border border-green-200"
+                                          title="문제 보기"
+                                        >
+                                          <FileQuestion className="h-4 w-4 inline mr-1" />
+                                          문제 보기 ({docQuizSets.length})
+                                        </button>
+                                      ) : (
+                                        <button
+                                          onClick={() => handleCreateQuiz(doc)}
+                                          className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200"
+                                          title="문제 만들기"
+                                        >
+                                          <FileQuestion className="h-4 w-4 inline mr-1" />
+                                          문제 만들기
+                                        </button>
+                                      )}
+                                      {docVocabSets.length > 0 ? (
+                                        <button
+                                          onClick={() => handleViewVocabulary(doc)}
+                                          className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
+                                          title="단어장 보기"
+                                        >
+                                          <BookOpen className="h-4 w-4 inline mr-1" />
+                                          단어장 보기
+                                        </button>
+                                      ) : (
+                                        <button
+                                          onClick={() => handleCreateVocabulary(doc)}
+                                          className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
+                                          title="단어장 만들기"
+                                        >
+                                          <BookOpen className="h-4 w-4 inline mr-1" />
+                                          단어장 만들기
+                                        </button>
+                                      )}
+                                    </>
+                                  )}
                                 </div>
                               </>
                             )}
                           </div>
-                        ))
+                        )})
                       )}
                     </div>
                   )}
@@ -548,7 +794,7 @@ const Documents: React.FC = () => {
               >
                 <div className="flex items-center space-x-2">
                   <FileText className="h-5 w-5 text-gray-600" />
-                  <span className="font-medium">무제 폴더</span>
+                  <span className="font-medium">기본 폴더</span>
                   {!movingFile.currentFolderId && (
                     <span className="text-xs text-gray-500">(현재 위치)</span>
                   )}
@@ -577,6 +823,33 @@ const Documents: React.FC = () => {
               ))}
             </div>
             
+            <button
+              onClick={() => setShowNewFolderInModal(!showNewFolderInModal)}
+              className="w-full mt-2 text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg"
+            >
+              + 새 폴더 만들기
+            </button>
+            
+            {showNewFolderInModal && (
+              <div className="mt-2 flex space-x-2">
+                <input
+                  type="text"
+                  value={newFolderNameInModal}
+                  onChange={(e) => setNewFolderNameInModal(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && createFolderInModal()}
+                  placeholder="폴더 이름"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+                <button
+                  onClick={createFolderInModal}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  생성
+                </button>
+              </div>
+            )}
+            
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => {
@@ -586,6 +859,94 @@ const Documents: React.FC = () => {
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
               >
                 취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showQuizListModal && selectedDocForQuizList && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {selectedDocForQuizList.fileName}의 문제 목록
+              </h3>
+              <button
+                onClick={() => {
+                  setShowQuizListModal(false);
+                  setSelectedDocForQuizList(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-3 max-h-96 overflow-y-auto mb-4">
+              {getQuizSetsForDocument(selectedDocForQuizList.id).map((quizSet) => (
+                <div
+                  key={quizSet.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer"
+                  onClick={() => handleViewQuiz(quizSet.id)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <FileQuestion className="h-5 w-5 text-blue-600" />
+                        <h4 className="font-medium text-gray-900">{quizSet.title}</h4>
+                      </div>
+                      <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
+                        <span>총 {quizSet.questions.length}문제</span>
+                        <span>•</span>
+                        <span>{new Date(quizSet.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      {quizSet.settings && (
+                        <div className="mt-2 flex items-center space-x-3 text-xs text-gray-500">
+                          {quizSet.settings.multipleChoiceCount > 0 && (
+                            <span>객관식 {quizSet.settings.multipleChoiceCount}개</span>
+                          )}
+                          {quizSet.settings.shortAnswerCount > 0 && (
+                            <span>단답형 {quizSet.settings.shortAnswerCount}개</span>
+                          )}
+                          {quizSet.settings.essayCount > 0 && (
+                            <span>서술형 {quizSet.settings.essayCount}개</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewQuiz(quizSet.id);
+                      }}
+                      className="ml-4 px-3 py-1 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded"
+                    >
+                      풀기
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+              <button
+                onClick={() => handleCreateQuiz(selectedDocForQuizList)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+                <span>추가 문제 만들기</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowQuizListModal(false);
+                  setSelectedDocForQuizList(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                닫기
               </button>
             </div>
           </div>

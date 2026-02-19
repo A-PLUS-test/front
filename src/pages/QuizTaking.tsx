@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, collection, addDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, serverTimestamp, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
@@ -191,6 +191,14 @@ const QuizTaking: React.FC = () => {
 
       const resultRef = await addDoc(collection(db, 'quizResults'), resultData);
 
+      // 진행 상태 삭제
+      try {
+        const progressRef = doc(db, 'quizProgress', `${currentUser.uid}_${quiz.id}`);
+        await deleteDoc(progressRef);
+      } catch (error) {
+        console.error('진행 상태 삭제 실패:', error);
+      }
+
       // 결과 페이지로 이동
       navigate(`/quiz/result/${resultRef.id}`);
     } catch (err) {
@@ -295,7 +303,28 @@ const QuizTaking: React.FC = () => {
                     페이지 {currentQuestion.pageNumber}
                   </span>
                 )}
+                {currentQuestion.documentName && quiz.isCombined && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    📄 {currentQuestion.documentName}
+                  </span>
+                )}
               </div>
+              {quiz.isCombined && quiz.sourceDocuments && quiz.sourceDocuments.length > 0 && (
+                <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="text-xs font-semibold text-purple-900 mb-2">혼합 문제 출처:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {quiz.sourceDocuments.map((source, idx) => (
+                      <div
+                        key={idx}
+                        className="inline-flex items-center px-2 py-1 bg-white rounded text-xs text-purple-800 border border-purple-200"
+                      >
+                        <FileText className="h-3 w-3 mr-1" />
+                        {source.fileName} ({source.questionCount}문제)
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 문제 내용 */}

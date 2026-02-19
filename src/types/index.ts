@@ -24,6 +24,7 @@ export interface Question {
   explanation?: string;
   pageNumber?: number; // 출처 페이지
   documentId?: string; // 출처 문서
+  documentName?: string; // 출처 문서명 (혼합 문제용)
 }
 
 export interface Answer {
@@ -59,6 +60,7 @@ export interface Folder {
   updatedAt: Date;
   isDeleted?: boolean;
   deletedAt?: Date;
+  isFavorite?: boolean;
 }
 
 // 퀴즈 세트 타입
@@ -70,6 +72,8 @@ export interface QuizSet {
   questions: Question[];
   createdAt: Date;
   settings: QuizSettings;
+  isCombined?: boolean; // 혼합 문제 여부
+  sourceDocuments?: { documentId: string; fileName: string; questionCount: number }[]; // 출처 문서 목록
 }
 
 export interface QuizSettings {

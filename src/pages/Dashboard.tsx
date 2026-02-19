@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 import SimplePdfViewer from '../components/SimplePdfViewer';
-import { FileText, Upload, BookOpen, Clock, PlayCircle, CheckCircle, FileQuestion, Eye } from 'lucide-react';
-import type { Document } from '../types';
+import { FileText, Upload, FileQuestion, Star, BookOpen, Plus } from 'lucide-react';
+import type { Document, Folder, QuizSet, VocabularySet } from '../types';
 
 interface SavedQuiz {
   id: string;
@@ -16,30 +16,18 @@ interface SavedQuiz {
   createdAt: any;
 }
 
-interface QuizResult {
-  id: string;
-  quizSetId: string;
-  score: number;
-  totalQuestions: number;
-  completedAt: any;
-}
-
-interface VocabSet {
-  id: string;
-  documentId: string;
-  title: string;
-  wordsCount: number;
-  createdAt: any;
-}
-
 const Dashboard: React.FC = () => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [savedQuizzes, setSavedQuizzes] = useState<SavedQuiz[]>([]);
-  const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
-  const [vocabSets, setVocabSets] = useState<VocabSet[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPdf, setSelectedPdf] = useState<{ url: string; name: string } | null>(null);
+  const [quizSets, setQuizSets] = useState<QuizSet[]>([]);
+  const [vocabularySets, setVocabularySets] = useState<VocabularySet[]>([]);
+  const [showQuizListModal, setShowQuizListModal] = useState(false);
+  const [selectedDocForQuizList, setSelectedDocForQuizList] = useState<Document | null>(null);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -89,43 +77,59 @@ const Dashboard: React.FC = () => {
         });
         setSavedQuizzes(quizzes);
 
-        // 퀴즈 결과 불러오기
-        const resultsQuery = query(
-          collection(db, 'quizResults'),
+        // 폴더 불러오기
+        const foldersQuery = query(
+          collection(db, 'folders'),
           where('userId', '==', currentUser.uid)
         );
-        const resultsSnapshot = await getDocs(resultsQuery);
-        const results: QuizResult[] = [];
-        resultsSnapshot.forEach((doc) => {
+        const foldersSnapshot = await getDocs(foldersQuery);
+        const fetchedFolders: Folder[] = [];
+        foldersSnapshot.forEach((doc) => {
           const data = doc.data();
-          results.push({
-            id: doc.id,
-            quizSetId: data.quizSetId,
-            score: data.score,
-            totalQuestions: data.totalQuestions,
-            completedAt: data.completedAt,
-          });
+          if (data.isDeleted !== true) {
+            fetchedFolders.push({
+              id: doc.id,
+              ...data,
+              createdAt: data.createdAt?.toDate?.() || new Date(),
+              updatedAt: data.updatedAt?.toDate?.() || new Date(),
+            } as Folder);
+          }
         });
-        setQuizResults(results);
+        setFolders(fetchedFolders);
 
-        // 단어장 불러오기
+        // 퀴즈 세트 가져오기
+        const quizSetsQuery = query(
+          collection(db, 'quizzes'),
+          where('userId', '==', currentUser.uid)
+        );
+        const quizSetsSnapshot = await getDocs(quizSetsQuery);
+        const fetchedQuizSets: QuizSet[] = [];
+        quizSetsSnapshot.forEach((doc) => {
+          const data = doc.data();
+          fetchedQuizSets.push({
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+          } as QuizSet);
+        });
+        setQuizSets(fetchedQuizSets);
+
+        // 단어장 세트 가져오기
         const vocabQuery = query(
           collection(db, 'vocabularySets'),
           where('userId', '==', currentUser.uid)
         );
         const vocabSnapshot = await getDocs(vocabQuery);
-        const vocabs: VocabSet[] = [];
+        const fetchedVocabSets: VocabularySet[] = [];
         vocabSnapshot.forEach((doc) => {
           const data = doc.data();
-          vocabs.push({
+          fetchedVocabSets.push({
             id: doc.id,
-            documentId: data.documentId,
-            title: data.title,
-            wordsCount: data.words?.length || 0,
-            createdAt: data.createdAt,
-          });
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+          } as VocabularySet);
         });
-        setVocabSets(vocabs);
+        setVocabularySets(fetchedVocabSets);
 
       } catch (error) {
         console.error('데이터 불러오기 실패:', error);
@@ -148,6 +152,38 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const getQuizSetsForDocument = (documentId: string) => {
+    return quizSets.filter(quiz => quiz.documentId === documentId);
+  };
+
+  const getVocabularySetsForDocument = (documentId: string) => {
+    return vocabularySets.filter(vocab => vocab.documentId === documentId);
+  };
+
+  const handleCreateQuiz = (doc: Document) => {
+    navigate(`/quiz/settings/${doc.id}`);
+  };
+
+  const handleCreateVocabulary = (doc: Document) => {
+    navigate(`/vocabulary/${doc.id}`);
+  };
+
+  const handleViewQuizzes = (doc: Document) => {
+    setSelectedDocForQuizList(doc);
+    setShowQuizListModal(true);
+  };
+
+  const handleViewVocabulary = (doc: Document) => {
+    const vocabSets = getVocabularySetsForDocument(doc.id);
+    if (vocabSets.length > 0) {
+      navigate(`/vocabulary/${doc.id}`);
+    }
+  };
+
+  const handleViewQuiz = (quizSetId: string) => {
+    navigate(`/quiz/take/${quizSetId}`);
+  };
+
   return (
     <Layout>
       <div className="p-8 max-w-7xl mx-auto">
@@ -157,33 +193,31 @@ const Dashboard: React.FC = () => {
           <p className="mt-2 text-gray-600">{currentUser?.email}</p>
         </div>
 
-        {/* 학습 진행 상황 카드 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-100 rounded-lg p-6">
-            <div className="text-center">
-              <div className="text-sm text-gray-600 mb-2">진행중</div>
-              <div className="text-3xl font-bold text-blue-600">{savedQuizzes.length}/10</div>
+        {/* 학습 진행 상황 카드 제거, 즐겨찾기 폴더로 대체 */}
+        {folders.filter(f => f.isFavorite).length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">즐겨찾기 폴더</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {folders
+                .filter(f => f.isFavorite)
+                .map((folder) => (
+                  <Link
+                    key={folder.id}
+                    to={`/folder/${folder.id}`}
+                    className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-200"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-gray-900 truncate">{folder.name}</h3>
+                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {documents.filter(d => d.folderId === folder.id).length}개 파일
+                    </p>
+                  </Link>
+                ))}
             </div>
           </div>
-          <div className="bg-gray-100 rounded-lg p-6">
-            <div className="text-center">
-              <div className="text-sm text-gray-600 mb-2">진행중</div>
-              <div className="text-3xl font-bold text-blue-600">0/10</div>
-            </div>
-          </div>
-          <div className="bg-gray-100 rounded-lg p-6">
-            <div className="text-center">
-              <div className="text-sm text-gray-600 mb-2">진행중</div>
-              <div className="text-3xl font-bold text-blue-600">0/10</div>
-            </div>
-          </div>
-          <div className="bg-gray-100 rounded-lg p-6">
-            <div className="text-center">
-              <div className="text-sm text-gray-600 mb-2">진행중</div>
-              <div className="text-3xl font-bold text-blue-600">0/10</div>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* 최근에 본 퀴즈 섹션 */}
         <div className="mb-8">
@@ -243,44 +277,172 @@ const Dashboard: React.FC = () => {
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
-                {documents.slice(0, 5).map((doc) => (
-                  <button
+                {documents.slice(0, 5).map((doc) => {
+                  const docQuizSets = getQuizSetsForDocument(doc.id);
+                  const docVocabSets = getVocabularySetsForDocument(doc.id);
+                  
+                  return (
+                  <div
                     key={doc.id}
-                    onClick={() => doc.fileType === 'pdf' && handleViewPdf(doc)}
-                    className="w-full p-4 hover:bg-gray-50 transition-colors text-left"
+                    className="p-4 hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 flex-1">
+                      <button
+                        onClick={() => doc.fileType === 'pdf' && handleViewPdf(doc)}
+                        className="flex items-center space-x-4 flex-1 text-left"
+                      >
                         <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                           <FileText className="h-6 w-6 text-blue-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="text-sm font-medium text-gray-900 truncate">{doc.fileName}</h3>
                           <div className="flex items-center space-x-3 mt-1">
-                            <span className="text-xs text-gray-500">
-                              퀴즈 2개 • 핵심단어 30개
-                            </span>
                             <span className="text-xs text-gray-400">
                               {new Date(doc.uploadedAt).toLocaleDateString('ko-KR')}
                             </span>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
+                      </button>
+                      <div className="flex items-center space-x-2 ml-4">
                         {doc.fileType === 'pdf' && (
-                          <div className="p-2 text-gray-400">
-                            <Eye className="h-5 w-5" />
-                          </div>
+                          <>
+                            {docQuizSets.length > 0 ? (
+                              <button
+                                onClick={() => handleViewQuizzes(doc)}
+                                className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded border border-green-200"
+                                title="문제 보기"
+                              >
+                                <FileQuestion className="h-4 w-4 inline mr-1" />
+                                문제 보기 ({docQuizSets.length})
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleCreateQuiz(doc)}
+                                className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200"
+                                title="문제 만들기"
+                              >
+                                <FileQuestion className="h-4 w-4 inline mr-1" />
+                                문제 만들기
+                              </button>
+                            )}
+                            {docVocabSets.length > 0 ? (
+                              <button
+                                onClick={() => handleViewVocabulary(doc)}
+                                className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
+                                title="단어장 보기"
+                              >
+                                <BookOpen className="h-4 w-4 inline mr-1" />
+                                단어장 보기
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleCreateVocabulary(doc)}
+                                className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
+                                title="단어장 만들기"
+                              >
+                                <BookOpen className="h-4 w-4 inline mr-1" />
+                                단어장 만들기
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
-                  </button>
-                ))}
+                  </div>
+                )})}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {showQuizListModal && selectedDocForQuizList && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {selectedDocForQuizList.fileName}의 문제 목록
+              </h3>
+              <button
+                onClick={() => {
+                  setShowQuizListModal(false);
+                  setSelectedDocForQuizList(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-3 max-h-96 overflow-y-auto mb-4">
+              {getQuizSetsForDocument(selectedDocForQuizList.id).map((quizSet) => (
+                <div
+                  key={quizSet.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer"
+                  onClick={() => handleViewQuiz(quizSet.id)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <FileQuestion className="h-5 w-5 text-blue-600" />
+                        <h4 className="font-medium text-gray-900">{quizSet.title}</h4>
+                      </div>
+                      <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
+                        <span>총 {quizSet.questions.length}문제</span>
+                        <span>•</span>
+                        <span>{new Date(quizSet.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      {quizSet.settings && (
+                        <div className="mt-2 flex items-center space-x-3 text-xs text-gray-500">
+                          {quizSet.settings.multipleChoiceCount > 0 && (
+                            <span>객관식 {quizSet.settings.multipleChoiceCount}개</span>
+                          )}
+                          {quizSet.settings.shortAnswerCount > 0 && (
+                            <span>단답형 {quizSet.settings.shortAnswerCount}개</span>
+                          )}
+                          {quizSet.settings.essayCount > 0 && (
+                            <span>서술형 {quizSet.settings.essayCount}개</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewQuiz(quizSet.id);
+                      }}
+                      className="ml-4 px-3 py-1 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded"
+                    >
+                      풀기
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+              <button
+                onClick={() => handleCreateQuiz(selectedDocForQuizList)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+                <span>추가 문제 만들기</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowQuizListModal(false);
+                  setSelectedDocForQuizList(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedPdf && (
         <SimplePdfViewer
