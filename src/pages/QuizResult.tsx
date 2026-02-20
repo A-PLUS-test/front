@@ -51,7 +51,7 @@ const QuizResult: React.FC = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader className="h-8 w-8 animate-spin text-blue-600" />
+          <Loader className="h-8 w-8 animate-spin text-[#22C7FB]" />
         </div>
       </Layout>
     );
@@ -96,7 +96,7 @@ const QuizResult: React.FC = () => {
               </Link>
               <button
                 onClick={() => navigate(`/quiz/settings/${quiz.documentId}`)}
-                className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#22C7FB] hover:bg-[#1BB0E0]"
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
                 다시 풀기
@@ -147,7 +147,7 @@ const QuizResult: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-900">
                           문제 {index + 1}
                         </h3>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#22C7FB]/20 text-[#0e8fb8]">
                           {question.type === QuestionType.MULTIPLE_CHOICE && '객관식'}
                           {question.type === QuestionType.SHORT_ANSWER && '단답식'}
                           {question.type === QuestionType.ESSAY && '서술형'}
@@ -197,9 +197,9 @@ const QuizResult: React.FC = () => {
                           점수: <span className={getScoreColor(answer.score || 0)}>{answer.score}점</span>
                         </p>
                         {answer.feedback && (
-                          <div className="bg-blue-50 p-3 rounded">
-                            <p className="text-sm font-medium text-blue-900 mb-1">AI 피드백:</p>
-                            <p className="text-blue-800 whitespace-pre-wrap">{answer.feedback}</p>
+                          <div className="bg-[#22C7FB]/10 p-3 rounded">
+                            <p className="text-sm font-medium text-[#0e8fb8] mb-1">AI 피드백:</p>
+                            <p className="text-[#0e8fb8] whitespace-pre-wrap">{answer.feedback}</p>
                           </div>
                         )}
                       </div>
@@ -209,7 +209,7 @@ const QuizResult: React.FC = () => {
                     {question.explanation && (
                       <div>
                         <p className="text-sm font-medium text-gray-700 mb-1">해설:</p>
-                        <p className="text-gray-700 bg-blue-50 p-3 rounded whitespace-pre-wrap">
+                        <p className="text-gray-700 bg-[#22C7FB]/10 p-3 rounded whitespace-pre-wrap">
                           {question.explanation}
                         </p>
                       </div>

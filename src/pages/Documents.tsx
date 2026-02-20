@@ -385,7 +385,7 @@ const Documents: React.FC = () => {
           </div>
           <button
             onClick={() => setShowNewFolderInput(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#22C7FB] text-white rounded-lg hover:bg-[#1BB0E0] transition-colors"
           >
             <FolderPlus className="h-5 w-5" />
             <span>새 폴더</span>
@@ -400,13 +400,13 @@ const Documents: React.FC = () => {
               onChange={(e) => setNewFolderName(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && createFolder()}
               placeholder="폴더 이름을 입력하세요"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
               autoFocus
             />
             <div className="mt-2 flex space-x-2">
               <button
                 onClick={createFolder}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-[#22C7FB] text-white rounded-md hover:bg-[#1BB0E0]"
               >
                 생성
               </button>
@@ -425,7 +425,7 @@ const Documents: React.FC = () => {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C7FB]"></div>
             <p className="mt-4 text-gray-600">불러오는 중...</p>
           </div>
         ) : (
@@ -471,16 +471,16 @@ const Documents: React.FC = () => {
                             onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
                             onKeyPress={(e) => e.key === 'Enter' && renameItem()}
                             onBlur={renameItem}
-                            className="flex-1 px-2 py-1 border border-blue-500 rounded focus:outline-none"
+                            className="flex-1 px-2 py-1 border border-[#22C7FB] rounded focus:outline-none"
                             autoFocus
                           />
                         ) : (
                           <>
                             <button
                               onClick={() => doc.fileType === 'pdf' && handleViewPdf(doc)}
-                              className="flex items-center space-x-3 flex-1 text-left hover:text-blue-600 transition-colors"
+                              className="flex items-center space-x-3 flex-1 text-left hover:text-[#22C7FB] transition-colors"
                             >
-                              <FileText className="h-5 w-5 text-blue-600" />
+                              <FileText className="h-5 w-5 text-[#22C7FB]" />
                               <span className="text-sm text-gray-900">{doc.fileName}</span>
                               <span className="text-xs text-gray-500 uppercase">{doc.fileType}</span>
                             </button>
@@ -530,7 +530,7 @@ const Documents: React.FC = () => {
                                   ) : (
                                     <button
                                       onClick={() => handleCreateQuiz(doc)}
-                                      className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200"
+                                      className="px-3 py-1 text-xs font-medium text-[#0e8fb8] bg-[#22C7FB]/10 hover:bg-[#22C7FB]/20 rounded border border-[#22C7FB]/30"
                                       title="문제 만들기"
                                     >
                                       <FileQuestion className="h-4 w-4 inline mr-1" />
@@ -589,7 +589,7 @@ const Documents: React.FC = () => {
                       ) : (
                         <ChevronRight className="h-5 w-5 text-gray-600" />
                       )}
-                      <FolderIcon className="h-5 w-5 text-blue-600" />
+                      <FolderIcon className="h-5 w-5 text-[#22C7FB]" />
                       {editingItem?.id === folder.id ? (
                         <input
                           type="text"
@@ -598,7 +598,7 @@ const Documents: React.FC = () => {
                           onKeyPress={(e) => e.key === 'Enter' && renameItem()}
                           onBlur={renameItem}
                           onClick={(e) => e.stopPropagation()}
-                          className="flex-1 px-2 py-1 border border-blue-500 rounded focus:outline-none"
+                          className="flex-1 px-2 py-1 border border-[#22C7FB] rounded focus:outline-none"
                           autoFocus
                         />
                       ) : (
@@ -666,16 +666,16 @@ const Documents: React.FC = () => {
                                 onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
                                 onKeyPress={(e) => e.key === 'Enter' && renameItem()}
                                 onBlur={renameItem}
-                                className="flex-1 px-2 py-1 border border-blue-500 rounded focus:outline-none"
+                                className="flex-1 px-2 py-1 border border-[#22C7FB] rounded focus:outline-none"
                                 autoFocus
                               />
                             ) : (
                               <>
                                 <button
                                   onClick={() => doc.fileType === 'pdf' && handleViewPdf(doc)}
-                                  className="flex items-center space-x-3 flex-1 ml-7 text-left hover:text-blue-600 transition-colors"
+                                  className="flex items-center space-x-3 flex-1 ml-7 text-left hover:text-[#22C7FB] transition-colors"
                                 >
-                                  <FileText className="h-5 w-5 text-blue-600" />
+                                  <FileText className="h-5 w-5 text-[#22C7FB]" />
                                   <span className="text-sm text-gray-900">{doc.fileName}</span>
                                   <span className="text-xs text-gray-500 uppercase">{doc.fileType}</span>
                                 </button>
@@ -725,7 +725,7 @@ const Documents: React.FC = () => {
                                       ) : (
                                         <button
                                           onClick={() => handleCreateQuiz(doc)}
-                                          className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200"
+                                          className="px-3 py-1 text-xs font-medium text-[#0e8fb8] bg-[#22C7FB]/10 hover:bg-[#22C7FB]/20 rounded border border-[#22C7FB]/30"
                                           title="문제 만들기"
                                         >
                                           <FileQuestion className="h-4 w-4 inline mr-1" />
@@ -788,8 +788,8 @@ const Documents: React.FC = () => {
                 disabled={!movingFile.currentFolderId}
                 className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
                   !movingFile.currentFolderId
-                    ? 'border-blue-500 bg-blue-50 cursor-not-allowed'
-                    : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
+                    ? 'border-[#22C7FB] bg-[#22C7FB]/10 cursor-not-allowed'
+                    : 'border-gray-200 hover:border-[#22C7FB] hover:bg-[#22C7FB]/10'
                 }`}
               >
                 <div className="flex items-center space-x-2">
@@ -808,12 +808,12 @@ const Documents: React.FC = () => {
                   disabled={movingFile.currentFolderId === folder.id}
                   className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
                     movingFile.currentFolderId === folder.id
-                      ? 'border-blue-500 bg-blue-50 cursor-not-allowed'
-                      : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
+                      ? 'border-[#22C7FB] bg-[#22C7FB]/10 cursor-not-allowed'
+                      : 'border-gray-200 hover:border-[#22C7FB] hover:bg-[#22C7FB]/10'
                   }`}
                 >
                   <div className="flex items-center space-x-2">
-                    <FileText className="h-5 w-5 text-blue-600" />
+                    <FileText className="h-5 w-5 text-[#22C7FB]" />
                     <span className="font-medium">{folder.name}</span>
                     {movingFile.currentFolderId === folder.id && (
                       <span className="text-xs text-gray-500">(현재 위치)</span>
@@ -825,7 +825,7 @@ const Documents: React.FC = () => {
             
             <button
               onClick={() => setShowNewFolderInModal(!showNewFolderInModal)}
-              className="w-full mt-2 text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg"
+              className="w-full mt-2 text-left px-4 py-2 text-sm text-[#22C7FB] hover:bg-[#22C7FB]/10 rounded-lg"
             >
               + 새 폴더 만들기
             </button>
@@ -838,12 +838,12 @@ const Documents: React.FC = () => {
                   onChange={(e) => setNewFolderNameInModal(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && createFolderInModal()}
                   placeholder="폴더 이름"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
                   autoFocus
                 />
                 <button
                   onClick={createFolderInModal}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-[#22C7FB] text-white rounded-md hover:bg-[#1BB0E0]"
                 >
                   생성
                 </button>
@@ -889,13 +889,13 @@ const Documents: React.FC = () => {
               {getQuizSetsForDocument(selectedDocForQuizList.id).map((quizSet) => (
                 <div
                   key={quizSet.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer"
+                  className="border border-gray-200 rounded-lg p-4 hover:border-[#22C7FB]/50 hover:bg-[#22C7FB]/10 transition-colors cursor-pointer"
                   onClick={() => handleViewQuiz(quizSet.id)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
-                        <FileQuestion className="h-5 w-5 text-blue-600" />
+                        <FileQuestion className="h-5 w-5 text-[#22C7FB]" />
                         <h4 className="font-medium text-gray-900">{quizSet.title}</h4>
                       </div>
                       <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
@@ -922,7 +922,7 @@ const Documents: React.FC = () => {
                         e.stopPropagation();
                         handleViewQuiz(quizSet.id);
                       }}
-                      className="ml-4 px-3 py-1 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded"
+                      className="ml-4 px-3 py-1 text-sm font-medium text-[#0e8fb8] bg-[#22C7FB]/10 hover:bg-[#22C7FB]/20 rounded"
                     >
                       풀기
                     </button>
@@ -934,7 +934,7 @@ const Documents: React.FC = () => {
             <div className="flex justify-between items-center pt-4 border-t border-gray-200">
               <button
                 onClick={() => handleCreateQuiz(selectedDocForQuizList)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-[#22C7FB] text-white rounded-lg hover:bg-[#1BB0E0] transition-colors"
               >
                 <Plus className="h-5 w-5" />
                 <span>추가 문제 만들기</span>

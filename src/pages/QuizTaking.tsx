@@ -84,7 +84,7 @@ const QuizTaking: React.FC = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader className="h-8 w-8 animate-spin text-blue-600" />
+          <Loader className="h-8 w-8 animate-spin text-[#22C7FB]" />
         </div>
       </Layout>
     );
@@ -240,7 +240,7 @@ const QuizTaking: React.FC = () => {
                   onClick={() => handleQuestionSelect(index)}
                   className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isCurrent
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-[#22C7FB] text-white'
                       : isAnswered
                       ? 'bg-green-100 text-green-800 hover:bg-green-200'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -269,7 +269,7 @@ const QuizTaking: React.FC = () => {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all"
+                className="bg-[#22C7FB] h-2 rounded-full transition-all"
                 style={{
                   width: `${(Object.keys(answers).length / totalQuestions) * 100}%`,
                 }}
@@ -292,7 +292,7 @@ const QuizTaking: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#22C7FB]/20 text-[#0e8fb8]">
                   {currentQuestion.type === QuestionType.MULTIPLE_CHOICE && '객관식'}
                   {currentQuestion.type === QuestionType.SHORT_ANSWER && '단답식'}
                   {currentQuestion.type === QuestionType.ESSAY && '서술형'}
@@ -341,7 +341,7 @@ const QuizTaking: React.FC = () => {
                       key={index}
                       className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                         answers[currentQuestion.id] === option
-                          ? 'border-blue-600 bg-blue-50'
+                          ? 'border-[#22C7FB] bg-[#22C7FB]/10'
                           : 'border-gray-300 hover:border-gray-400'
                       }`}
                     >
@@ -351,7 +351,7 @@ const QuizTaking: React.FC = () => {
                         value={option}
                         checked={answers[currentQuestion.id] === option}
                         onChange={(e) => handleAnswerChange(e.target.value)}
-                        className="mt-1 h-4 w-4 text-blue-600"
+                        className="mt-1 h-4 w-4 text-[#22C7FB]"
                       />
                       <span className="ml-3 text-gray-900">{option}</span>
                     </label>
@@ -366,7 +366,7 @@ const QuizTaking: React.FC = () => {
                   value={answers[currentQuestion.id] || ''}
                   onChange={(e) => handleAnswerChange(e.target.value)}
                   placeholder="답변을 입력하세요"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
                 />
               )}
 
@@ -377,7 +377,7 @@ const QuizTaking: React.FC = () => {
                   onChange={(e) => handleAnswerChange(e.target.value)}
                   placeholder="답변을 작성하세요 (AI가 채점합니다)"
                   rows={8}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
                 />
               )}
             </div>
@@ -414,7 +414,7 @@ const QuizTaking: React.FC = () => {
               ) : (
                 <button
                   onClick={handleNext}
-                  className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                  className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#22C7FB] hover:bg-[#1BB0E0]"
                 >
                   다음
                   <ChevronRight className="h-4 w-4 ml-1" />

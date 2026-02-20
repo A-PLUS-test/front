@@ -93,7 +93,7 @@ const QuizSettings: React.FC = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader className="h-8 w-8 animate-spin text-blue-600" />
+          <Loader className="h-8 w-8 animate-spin text-[#22C7FB]" />
         </div>
       </Layout>
     );
@@ -118,7 +118,7 @@ const QuizSettings: React.FC = () => {
           {/* 헤더 */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <Settings className="h-8 w-8 mr-3 text-blue-600" />
+              <Settings className="h-8 w-8 mr-3 text-[#22C7FB]" />
               퀴즈 설정
             </h1>
             <p className="mt-2 text-gray-600">{document.fileName}</p>
@@ -138,7 +138,7 @@ const QuizSettings: React.FC = () => {
                   max="20"
                   value={multipleChoiceCount}
                   onChange={(e) => setMultipleChoiceCount(parseInt(e.target.value) || 0)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   4개의 선택지 중 정답을 고르는 문제
@@ -156,7 +156,7 @@ const QuizSettings: React.FC = () => {
                   max="20"
                   value={shortAnswerCount}
                   onChange={(e) => setShortAnswerCount(parseInt(e.target.value) || 0)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   짧은 답변을 직접 작성하는 문제
@@ -174,7 +174,7 @@ const QuizSettings: React.FC = () => {
                   max="10"
                   value={essayCount}
                   onChange={(e) => setEssayCount(parseInt(e.target.value) || 0)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   깊이 있는 답변이 필요한 문제 (AI 채점)
@@ -185,7 +185,7 @@ const QuizSettings: React.FC = () => {
               <div className="pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold text-gray-900">총 문제 수</span>
-                  <span className="text-2xl font-bold text-blue-600">{totalQuestions}</span>
+                  <span className="text-2xl font-bold text-[#22C7FB]">{totalQuestions}</span>
                 </div>
               </div>
 
@@ -208,7 +208,7 @@ const QuizSettings: React.FC = () => {
                 <button
                   onClick={handleGenerateQuiz}
                   disabled={totalQuestions === 0 || generating}
-                  className="flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#22C7FB] hover:bg-[#1BB0E0] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {generating ? (
                     <>
@@ -227,9 +227,9 @@ const QuizSettings: React.FC = () => {
           </div>
 
           {/* 안내 사항 */}
-          <div className="mt-6 bg-blue-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-blue-900">안내 사항</h3>
-            <ul className="mt-2 text-sm text-blue-800 space-y-1 list-disc list-inside">
+          <div className="mt-6 bg-[#22C7FB]/10 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-[#0e8fb8]">안내 사항</h3>
+            <ul className="mt-2 text-sm text-[#0e8fb8] space-y-1 list-disc list-inside">
               <li>AI가 문서 내용을 분석하여 자동으로 문제를 생성합니다</li>
               <li>생성 시간은 문제 수와 문서 크기에 따라 다를 수 있습니다</li>
               <li>서술형 문제는 AI가 자동으로 채점하고 피드백을 제공합니다</li>

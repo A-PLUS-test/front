@@ -127,7 +127,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ fileUrl, fileName, onClose }) => 
         <div className="flex-1 overflow-auto bg-gray-100 flex items-center justify-center p-4">
           {loading ? (
             <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C7FB]"></div>
               <p className="mt-4 text-gray-600">PDF 로딩 중...</p>
             </div>
           ) : error ? (
@@ -141,7 +141,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ fileUrl, fileName, onClose }) => 
               <p className="text-gray-500 text-sm">{error}</p>
               <button
                 onClick={onClose}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="mt-4 px-4 py-2 bg-[#22C7FB] text-white rounded-md hover:bg-[#1BB0E0]"
               >
                 닫기
               </button>

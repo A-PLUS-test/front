@@ -187,7 +187,7 @@ const Trash: React.FC = () => {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#22C7FB]"></div>
             <p className="mt-4 text-gray-600">불러오는 중...</p>
           </div>
         ) : deletedItems.length === 0 ? (
@@ -221,7 +221,7 @@ const Trash: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => restoreItem(item)}
-                      className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100"
+                      className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-[#22C7FB] bg-[#22C7FB]/10 rounded-md hover:bg-[#22C7FB]/20"
                       title="복원"
                     >
                       <RotateCcw className="h-4 w-4" />

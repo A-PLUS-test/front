@@ -201,7 +201,7 @@ const UploadDocument: React.FC = () => {
               학습 자료를 업로드하여 문제와 단어 사전을 생성하세요
             </p>
             {preselectedFolderId && (
-              <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+              <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#22C7FB]/20 text-[#0e8fb8]">
                 <FolderOpen className="h-4 w-4 mr-1" />
                 {preselectedFolderId === 'default' 
                   ? '기본 폴더에 저장됩니다' 
@@ -231,7 +231,7 @@ const UploadDocument: React.FC = () => {
                     <select
                       value={selectedFolder}
                       onChange={(e) => setSelectedFolder(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
                     >
                       <option value="">기본 폴더</option>
                       {folders.map((folder) => (
@@ -243,7 +243,7 @@ const UploadDocument: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowNewFolderInput(!showNewFolderInput)}
-                      className="mt-2 text-sm text-blue-600 hover:text-blue-700"
+                      className="mt-2 text-sm text-[#22C7FB] hover:text-[#1BB0E0]"
                     >
                       + 새 폴더 만들기
                     </button>
@@ -255,12 +255,12 @@ const UploadDocument: React.FC = () => {
                           onChange={(e) => setNewFolderName(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && createFolder()}
                           placeholder="폴더 이름"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
                           autoFocus
                         />
                         <button
                           onClick={createFolder}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                          className="px-4 py-2 bg-[#22C7FB] text-white rounded-md hover:bg-[#1BB0E0]"
                         >
                           생성
                         </button>
@@ -274,13 +274,13 @@ const UploadDocument: React.FC = () => {
                   onDragOver={handleDragOver}
                   className={`border-2 border-dashed rounded-lg p-12 text-center ${
                     selectedFile
-                      ? 'border-blue-300 bg-blue-50'
+                      ? 'border-[#22C7FB]/50 bg-[#22C7FB]/10'
                       : 'border-gray-300 hover:border-gray-400'
                   }`}
                 >
                   {selectedFile ? (
                     <div className="space-y-4">
-                      <File className="mx-auto h-16 w-16 text-blue-600" />
+                      <File className="mx-auto h-16 w-16 text-[#22C7FB]" />
                       <div>
                         <p className="text-lg font-medium text-gray-900">{selectedFile.name}</p>
                         <p className="text-sm text-gray-500">
@@ -300,7 +300,7 @@ const UploadDocument: React.FC = () => {
                       <Upload className="mx-auto h-16 w-16 text-gray-400" />
                       <div>
                         <label htmlFor="file-upload" className="cursor-pointer">
-                          <span className="text-blue-600 hover:text-blue-500 font-medium">
+                          <span className="text-[#22C7FB] hover:text-[#1BB0E0] font-medium">
                             파일을 선택하거나
                           </span>
                           <input
@@ -329,9 +329,9 @@ const UploadDocument: React.FC = () => {
                   </div>
                 )}
 
-                <div className="mt-6 bg-blue-50 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-blue-900">안내 사항</h3>
-                  <ul className="mt-2 text-sm text-blue-800 space-y-1 list-disc list-inside">
+                <div className="mt-6 bg-[#22C7FB]/10 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-[#0e8fb8]">안내 사항</h3>
+                  <ul className="mt-2 text-sm text-[#0e8fb8] space-y-1 list-disc list-inside">
                     <li>파일 크기는 최대 50MB까지 지원됩니다</li>
                     <li>업로드된 파일은 자동으로 분석되어 문제와 단어 사전이 생성됩니다</li>
                     <li>영어 문서의 경우 단어 사전 기능을 이용할 수 있습니다</li>
@@ -349,7 +349,7 @@ const UploadDocument: React.FC = () => {
                   <button
                     onClick={handleUpload}
                     disabled={!selectedFile || uploading}
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#22C7FB] hover:bg-[#1BB0E0] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {uploading
                       ? processing

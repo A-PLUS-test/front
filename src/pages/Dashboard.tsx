@@ -238,7 +238,7 @@ const Dashboard: React.FC = () => {
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="font-semibold text-gray-900 line-clamp-2">{quiz.title}</h3>
                     {quiz.questionsCount > 0 && (
-                      <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                      <span className="ml-2 px-2 py-1 bg-[#22C7FB]/20 text-[#0e8fb8] text-xs font-medium rounded">
                         진행중
                       </span>
                     )}
@@ -259,7 +259,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             {loading ? (
               <div className="p-12 text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C7FB]"></div>
                 <p className="mt-2 text-gray-600">불러오는 중...</p>
               </div>
             ) : documents.length === 0 ? (
@@ -269,7 +269,7 @@ const Dashboard: React.FC = () => {
                 <p className="text-sm text-gray-500 mb-4">학습 자료를 업로드하여 시작하세요</p>
                 <Link
                   to="/upload"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#22C7FB] hover:bg-[#1BB0E0]"
                 >
                   <Upload className="h-4 w-4 mr-2" />
                   파일 업로드
@@ -291,8 +291,8 @@ const Dashboard: React.FC = () => {
                         onClick={() => doc.fileType === 'pdf' && handleViewPdf(doc)}
                         className="flex items-center space-x-4 flex-1 text-left"
                       >
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <FileText className="h-6 w-6 text-blue-600" />
+                        <div className="w-10 h-10 bg-[#22C7FB]/20 rounded-lg flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-[#22C7FB]" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="text-sm font-medium text-gray-900 truncate">{doc.fileName}</h3>
@@ -318,7 +318,7 @@ const Dashboard: React.FC = () => {
                             ) : (
                               <button
                                 onClick={() => handleCreateQuiz(doc)}
-                                className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200"
+                                className="px-3 py-1 text-xs font-medium text-[#0e8fb8] bg-[#22C7FB]/10 hover:bg-[#22C7FB]/20 rounded border border-[#22C7FB]/30"
                                 title="문제 만들기"
                               >
                                 <FileQuestion className="h-4 w-4 inline mr-1" />
@@ -380,13 +380,13 @@ const Dashboard: React.FC = () => {
               {getQuizSetsForDocument(selectedDocForQuizList.id).map((quizSet) => (
                 <div
                   key={quizSet.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer"
+                  className="border border-gray-200 rounded-lg p-4 hover:border-[#22C7FB]/50 hover:bg-[#22C7FB]/10 transition-colors cursor-pointer"
                   onClick={() => handleViewQuiz(quizSet.id)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
-                        <FileQuestion className="h-5 w-5 text-blue-600" />
+                        <FileQuestion className="h-5 w-5 text-[#22C7FB]" />
                         <h4 className="font-medium text-gray-900">{quizSet.title}</h4>
                       </div>
                       <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
@@ -413,7 +413,7 @@ const Dashboard: React.FC = () => {
                         e.stopPropagation();
                         handleViewQuiz(quizSet.id);
                       }}
-                      className="ml-4 px-3 py-1 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded"
+                      className="ml-4 px-3 py-1 text-sm font-medium text-[#0e8fb8] bg-[#22C7FB]/10 hover:bg-[#22C7FB]/20 rounded"
                     >
                       풀기
                     </button>
@@ -425,7 +425,7 @@ const Dashboard: React.FC = () => {
             <div className="flex justify-between items-center pt-4 border-t border-gray-200">
               <button
                 onClick={() => handleCreateQuiz(selectedDocForQuizList)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-[#22C7FB] text-white rounded-lg hover:bg-[#1BB0E0] transition-colors"
               >
                 <Plus className="h-5 w-5" />
                 <span>추가 문제 만들기</span>

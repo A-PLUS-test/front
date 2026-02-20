@@ -14,6 +14,8 @@ import QuizTaking from './pages/QuizTaking';
 import QuizResult from './pages/QuizResult';
 import Vocabulary from './pages/Vocabulary';
 import FolderVocabulary from './pages/FolderVocabulary';
+import About from './pages/About';
+import LandingRoute from './components/LandingRoute';
 
 function App() {
   return (
@@ -22,8 +24,10 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/about" element={<About />} />
           
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/" element={<LandingRoute />} />
+          <Route path="/home" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/upload" element={<ProtectedRoute><UploadDocument /></ProtectedRoute>} />
           <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
           <Route path="/folder/default" element={<ProtectedRoute><DefaultFolderView /></ProtectedRoute>} />

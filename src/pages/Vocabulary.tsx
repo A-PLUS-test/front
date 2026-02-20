@@ -109,7 +109,7 @@ const Vocabulary: React.FC = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader className="h-8 w-8 animate-spin text-blue-600" />
+          <Loader className="h-8 w-8 animate-spin text-[#22C7FB]" />
         </div>
       </Layout>
     );
@@ -122,7 +122,7 @@ const Vocabulary: React.FC = () => {
           <p className="text-red-600">{error || '문서를 찾을 수 없습니다.'}</p>
           <Link
             to="/"
-            className="mt-4 inline-flex items-center text-blue-600 hover:text-blue-500"
+            className="mt-4 inline-flex items-center text-[#22C7FB] hover:text-[#1BB0E0]"
           >
             홈으로 돌아가기
           </Link>
@@ -143,7 +143,7 @@ const Vocabulary: React.FC = () => {
           {/* 헤더 */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <BookOpen className="h-8 w-8 mr-3 text-blue-600" />
+              <BookOpen className="h-8 w-8 mr-3 text-[#22C7FB]" />
               단어 사전
             </h1>
             <p className="mt-2 text-gray-600">{document.fileName}</p>
@@ -162,7 +162,7 @@ const Vocabulary: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="단어 검색..."
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
                   />
                 </div>
                 <p className="mt-2 text-sm text-gray-600">
@@ -186,7 +186,7 @@ const Vocabulary: React.FC = () => {
                     </div>
                     <p className="text-gray-700 mb-2">{word.meaning}</p>
                     {word.context && (
-                      <p className="text-sm text-gray-500 italic border-l-2 border-blue-200 pl-3">
+                      <p className="text-sm text-gray-500 italic border-l-2 border-[#22C7FB]/30 pl-3">
                         "{word.context}"
                       </p>
                     )}
@@ -223,7 +223,7 @@ const Vocabulary: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center">
-                  <BookOpen className="mx-auto h-16 w-16 text-blue-600" />
+                  <BookOpen className="mx-auto h-16 w-16 text-[#22C7FB]" />
                   <h3 className="mt-4 text-lg font-medium text-gray-900">
                     단어 사전 생성하기
                   </h3>
@@ -241,7 +241,7 @@ const Vocabulary: React.FC = () => {
                     <button
                       onClick={handleGenerateVocabulary}
                       disabled={generating}
-                      className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[#22C7FB] hover:bg-[#1BB0E0] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {generating ? (
                         <>
@@ -257,9 +257,9 @@ const Vocabulary: React.FC = () => {
                     </button>
                   </div>
 
-                  <div className="mt-6 bg-blue-50 rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-blue-900">안내</h4>
-                    <ul className="mt-2 text-sm text-blue-800 space-y-1 list-disc list-inside text-left">
+                  <div className="mt-6 bg-[#22C7FB]/10 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-[#0e8fb8]">안내</h4>
+                    <ul className="mt-2 text-sm text-[#0e8fb8] space-y-1 list-disc list-inside text-left">
                       <li>AI가 문서에서 학술 용어와 중요한 단어를 자동으로 추출합니다</li>
                       <li>각 단어의 한국어 뜻과 문맥을 함께 제공합니다</li>
                       <li>생성 시간은 문서 크기에 따라 다를 수 있습니다</li>

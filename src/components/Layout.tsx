@@ -115,9 +115,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <aside className="w-64 bg-white shadow-lg fixed h-full flex flex-col">
         {/* 로고 */}
         <div className="p-6 border-b border-gray-200">
-          <Link to="/" className="flex items-center space-x-3">
+          <Link to="/home" className="flex items-center space-x-3">
             <img src="/aplus_icon.png" alt="APLUS" className="h-10 w-10" />
-            <span className="text-2xl font-bold text-gray-900">APLUS</span>
+            <span className="text-2xl logo-font" style={{ color: '#22C7FB' }}>APLUS</span>
           </Link>
         </div>
 
@@ -127,7 +127,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             to="/upload"
             className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
               location.pathname === '/upload'
-                ? 'bg-blue-50 text-blue-600'
+                ? 'bg-[#22C7FB]/10 text-[#22C7FB]'
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
@@ -136,10 +136,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Link>
           
           <Link
-            to="/"
+            to="/home"
             className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-              location.pathname === '/'
-                ? 'bg-blue-50 text-blue-600'
+              location.pathname === '/home' || location.pathname === '/'
+                ? 'bg-[#22C7FB]/10 text-[#22C7FB]'
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
@@ -209,7 +209,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 ))}
                 <button
                   onClick={() => setShowNewFolderInput(true)}
-                  className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                  className="w-full flex items-center space-x-2 px-4 py-2 rounded-lg text-sm text-[#22C7FB] hover:bg-[#22C7FB]/10 transition-colors"
                 >
                   <span className="text-lg">+</span>
                   <span>새 폴더</span>
@@ -233,7 +233,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         }
                       }}
                       placeholder="폴더 이름"
-                      className="w-full px-2 py-1 text-sm border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-2 py-1 text-sm border border-[#22C7FB] rounded focus:outline-none focus:ring-1 focus:ring-[#22C7FB]"
                       autoFocus
                     />
                   </div>
@@ -246,7 +246,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             to="/trash"
             className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
               location.pathname === '/trash'
-                ? 'bg-blue-50 text-blue-600'
+                ? 'bg-[#22C7FB]/10 text-[#22C7FB]'
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
@@ -254,6 +254,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <span>휴지통</span>
           </Link>
         </nav>
+
+        {/* 서비스 소개 버튼 */}
+        <div className="px-4 pb-4">
+          <Link
+            to="/about"
+            className="flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-sm font-medium text-[#22C7FB] bg-[#22C7FB]/10 hover:bg-[#22C7FB]/20 transition-colors border border-[#22C7FB]/30"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <span>서비스 소개</span>
+          </Link>
+        </div>
 
         {/* 하단 사용자 정보 */}
         <div className="p-4 border-t border-gray-200">

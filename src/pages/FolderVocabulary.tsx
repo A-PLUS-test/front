@@ -135,7 +135,7 @@ const FolderVocabulary: React.FC = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader className="h-8 w-8 animate-spin text-blue-600" />
+          <Loader className="h-8 w-8 animate-spin text-[#22C7FB]" />
         </div>
       </Layout>
     );
@@ -156,7 +156,7 @@ const FolderVocabulary: React.FC = () => {
             </button>
             
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <BookOpen className="h-8 w-8 mr-3 text-blue-600" />
+              <BookOpen className="h-8 w-8 mr-3 text-[#22C7FB]" />
               {folderName} - 통합 단어장
             </h1>
             <p className="mt-2 text-gray-600">
@@ -197,7 +197,7 @@ const FolderVocabulary: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="단어 또는 문서 이름 검색..."
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
                   />
                 </div>
                 <p className="mt-2 text-sm text-gray-600">
@@ -219,7 +219,7 @@ const FolderVocabulary: React.FC = () => {
                         className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                       >
                         <div className="flex items-center space-x-2 flex-1 min-w-0">
-                          <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                          <FileText className="h-4 w-4 text-[#22C7FB] flex-shrink-0" />
                           <span className="text-sm text-gray-900 truncate">{doc.fileName}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-600 ml-2">
@@ -248,13 +248,13 @@ const FolderVocabulary: React.FC = () => {
                     </div>
                     <p className="text-gray-700 mb-2">{word.meaning}</p>
                     {word.context && (
-                      <p className="text-sm text-gray-500 italic border-l-2 border-blue-200 pl-3 mb-2">
+                      <p className="text-sm text-gray-500 italic border-l-2 border-[#22C7FB]/30 pl-3 mb-2">
                         "{word.context}"
                       </p>
                     )}
                     <Link
                       to={`/vocabulary/${word.documentId}`}
-                      className="text-xs text-blue-600 hover:text-blue-700 flex items-center"
+                      className="text-xs text-[#22C7FB] hover:text-[#1BB0E0] flex items-center"
                     >
                       <FileText className="h-3 w-3 mr-1" />
                       {word.documentName}
