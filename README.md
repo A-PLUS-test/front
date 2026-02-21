@@ -61,7 +61,7 @@ npm install
 
 `.env` 파일을 생성하고 다음 내용을 입력하세요:
 
-\`\`\`env
+```env
 # Firebase Configuration
 VITE_FIREBASE_API_KEY=your_api_key_here
 VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain_here
@@ -72,7 +72,7 @@ VITE_FIREBASE_APP_ID=your_app_id_here
 
 # OpenAI API
 VITE_OPENAI_API_KEY=your_openai_api_key_here
-\`\`\`
+```
 
 ### 3. Firebase 설정
 
@@ -97,14 +97,14 @@ npm run dev
 
 ### 6. 프로덕션 빌드
 
-\`\`\`bash
+```bash
 npm run build
 npm run preview
-\`\`\`
+```
 
 ## 프로젝트 구조
 
-\`\`\`
+```
 src/
 ├── components/          # 재사용 가능한 컴포넌트
 │   ├── Layout.tsx      # 메인 레이아웃
@@ -131,7 +131,7 @@ src/
 │   └── vocabularyGenerator.ts  # 단어 사전 생성
 ├── App.tsx            # 앱 라우팅
 └── main.tsx          # 앱 진입점
-\`\`\`
+```
 
 ## 사용 방법
 
