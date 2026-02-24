@@ -114,6 +114,8 @@ src/
 ├── lib/               # 외부 라이브러리 설정
 │   ├── firebase.ts    # Firebase 초기화
 │   └── openai.ts      # OpenAI 클라이언트
+├── services/          # Firestore 조회/쓰기 공통 로직
+│   └── firestore.ts   # 문서/폴더/퀴즈/단어장 핸들러
 ├── pages/             # 페이지 컴포넌트
 │   ├── Login.tsx      # 로그인 페이지
 │   ├── SignUp.tsx     # 회원가입 페이지
@@ -132,6 +134,23 @@ src/
 ├── App.tsx            # 앱 라우팅
 └── main.tsx          # 앱 진입점
 ```
+
+## 앱 워크플로우
+
+1. 인증
+   - `AuthContext`에서 Firebase Auth 세션을 구독해 로그인/로그아웃 상태를 관리합니다.
+2. 파일 업로드
+   - `UploadDocument`에서 파일을 업로드하면 Firebase Storage에 저장하고, 메타데이터를 Firestore `documents` 컬렉션에 기록합니다.
+3. 텍스트 추출
+   - 업로드된 파일은 `utils/fileProcessor.ts`에서 PDF.js와 Mammoth로 텍스트를 추출하고 언어를 간단히 감지합니다.
+4. 문제/단어장 생성
+   - `utils/questionGenerator.ts`, `utils/vocabularyGenerator.ts`가 OpenAI API로 문제와 단어장을 생성합니다(키가 없거나 쿼터 초과 시 샘플 데이터로 대체).
+5. 데이터 조회 및 캐싱
+   - `services/firestore.ts`에서 문서, 폴더, 퀴즈 세트, 단어장 세트를 공통 형태로 가져오고 날짜를 Date로 정규화합니다.
+6. 대시보드/학습
+   - `Dashboard`와 각 페이지에서 공통 서비스로 데이터를 불러와 목록/뷰어/퀴즈 풀기 UI를 렌더링합니다.
+7. 결과/휴지통
+   - 퀴즈 결과는 `quizzes`, 삭제 문서는 `documents`의 `isDeleted` 플래그로 관리하며, `Trash` 페이지에서 복원/완전 삭제합니다.
 
 ## 사용 방법
 

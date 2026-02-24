@@ -1,26 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 import SimplePdfViewer from '../components/SimplePdfViewer';
 import { FileText, Upload, FileQuestion, Star, BookOpen, Plus } from 'lucide-react';
 import type { Document, Folder, QuizSet, VocabularySet } from '../types';
-
-interface SavedQuiz {
-  id: string;
-  documentId: string;
-  title: string;
-  questionsCount: number;
-  createdAt: any;
-}
+import { fetchDocumentsByUser, fetchFoldersByUser, fetchQuizSetsByUser, fetchVocabularySetsByUser } from '../services/firestore';
 
 const Dashboard: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [savedQuizzes, setSavedQuizzes] = useState<SavedQuiz[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPdf, setSelectedPdf] = useState<{ url: string; name: string } | null>(null);
@@ -31,106 +21,24 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchAllData = async () => {
-      if (!currentUser) return;
+      if (!currentUser) {
+        setLoading(false);
+        return;
+      }
 
       try {
-        // 문서 불러오기
-        const docsQuery = query(
-          collection(db, 'documents'),
-          where('userId', '==', currentUser.uid)
-        );
-        const docsSnapshot = await getDocs(docsQuery);
-        const docs: Document[] = [];
-        docsSnapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.isDeleted !== true) {
-            docs.push({ 
-              id: doc.id, 
-              ...data,
-              uploadedAt: data.uploadedAt?.toDate?.() || new Date(),
-            } as Document);
-          }
-        });
-        docs.sort((a, b) => {
-          const dateA = a.uploadedAt instanceof Date ? a.uploadedAt : new Date(a.uploadedAt);
-          const dateB = b.uploadedAt instanceof Date ? b.uploadedAt : new Date(b.uploadedAt);
-          return dateB.getTime() - dateA.getTime();
-        });
+        setLoading(true);
+        const [docs, quizzes, vocabs, userFolders] = await Promise.all([
+          fetchDocumentsByUser(currentUser.uid),
+          fetchQuizSetsByUser(currentUser.uid),
+          fetchVocabularySetsByUser(currentUser.uid),
+          fetchFoldersByUser(currentUser.uid),
+        ]);
+
         setDocuments(docs);
-
-        // 저장된 퀴즈 불러오기
-        const quizzesQuery = query(
-          collection(db, 'quizzes'),
-          where('userId', '==', currentUser.uid)
-        );
-        const quizzesSnapshot = await getDocs(quizzesQuery);
-        const quizzes: SavedQuiz[] = [];
-        quizzesSnapshot.forEach((doc) => {
-          const data = doc.data();
-          quizzes.push({
-            id: doc.id,
-            documentId: data.documentId,
-            title: data.title,
-            questionsCount: data.questions?.length || 0,
-            createdAt: data.createdAt,
-          });
-        });
-        setSavedQuizzes(quizzes);
-
-        // 폴더 불러오기
-        const foldersQuery = query(
-          collection(db, 'folders'),
-          where('userId', '==', currentUser.uid)
-        );
-        const foldersSnapshot = await getDocs(foldersQuery);
-        const fetchedFolders: Folder[] = [];
-        foldersSnapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.isDeleted !== true) {
-            fetchedFolders.push({
-              id: doc.id,
-              ...data,
-              createdAt: data.createdAt?.toDate?.() || new Date(),
-              updatedAt: data.updatedAt?.toDate?.() || new Date(),
-            } as Folder);
-          }
-        });
-        setFolders(fetchedFolders);
-
-        // 퀴즈 세트 가져오기
-        const quizSetsQuery = query(
-          collection(db, 'quizzes'),
-          where('userId', '==', currentUser.uid)
-        );
-        const quizSetsSnapshot = await getDocs(quizSetsQuery);
-        const fetchedQuizSets: QuizSet[] = [];
-        quizSetsSnapshot.forEach((doc) => {
-          const data = doc.data();
-          fetchedQuizSets.push({
-            id: doc.id,
-            ...data,
-            createdAt: data.createdAt?.toDate?.() || new Date(),
-          } as QuizSet);
-        });
-        setQuizSets(fetchedQuizSets);
-
-        // 단어장 세트 가져오기
-        const vocabQuery = query(
-          collection(db, 'vocabularySets'),
-          where('userId', '==', currentUser.uid)
-        );
-        const vocabSnapshot = await getDocs(vocabQuery);
-        const fetchedVocabSets: VocabularySet[] = [];
-        vocabSnapshot.forEach((doc) => {
-          const data = doc.data();
-          fetchedVocabSets.push({
-            id: doc.id,
-            ...data,
-            createdAt: data.createdAt?.toDate?.() || new Date(),
-          } as VocabularySet);
-        });
-        setVocabularySets(fetchedVocabSets);
-
+        setQuizSets(quizzes);
+        setVocabularySets(vocabs);
+        setFolders(userFolders);
       } catch (error) {
         console.error('데이터 불러오기 실패:', error);
       } finally {
@@ -140,6 +48,8 @@ const Dashboard: React.FC = () => {
 
     fetchAllData();
   }, [currentUser]);
+
+  const recentQuizSets = useMemo(() => quizSets.slice(0, 3), [quizSets]);
 
   const getDocumentName = (documentId: string) => {
     const doc = documents.find(d => d.id === documentId);
@@ -223,13 +133,13 @@ const Dashboard: React.FC = () => {
         <div className="mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">최근에 본 퀴즈</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {savedQuizzes.length === 0 ? (
+            {recentQuizSets.length === 0 ? (
               <div className="col-span-3 bg-white rounded-lg p-8 text-center">
                 <FileQuestion className="mx-auto h-12 w-12 text-gray-400 mb-2" />
                 <p className="text-gray-500">아직 생성된 퀴즈가 없습니다</p>
               </div>
             ) : (
-              savedQuizzes.slice(0, 3).map((quiz) => (
+              recentQuizSets.map((quiz) => (
                 <Link
                   key={quiz.id}
                   to={`/quiz/take/${quiz.id}`}
@@ -237,7 +147,7 @@ const Dashboard: React.FC = () => {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="font-semibold text-gray-900 line-clamp-2">{quiz.title}</h3>
-                    {quiz.questionsCount > 0 && (
+                    {quiz.questions?.length > 0 && (
                       <span className="ml-2 px-2 py-1 bg-[#22C7FB]/20 text-[#0e8fb8] text-xs font-medium rounded">
                         진행중
                       </span>
@@ -245,7 +155,7 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="text-sm text-gray-600 mb-2">{getDocumentName(quiz.documentId)}</div>
                   <div className="text-xs text-gray-500">
-                    {new Date().toLocaleDateString('ko-KR')}
+                    {new Date(quiz.createdAt).toLocaleDateString('ko-KR')}
                   </div>
                 </Link>
               ))
