@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { LogOut, Home, Upload, FolderOpen, Trash2, ChevronDown, ChevronRight, Folder, Star } from 'lucide-react';
 import type { Folder as FolderType } from '../types';
-import { createFolderForUser, fetchFoldersByUser, toggleFolderFavorite } from '../services/firestore';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -33,7 +34,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     if (!currentUser) return;
 
     try {
-      const fetchedFolders = await fetchFoldersByUser(currentUser.uid);
+      const foldersQuery = query(
+        collection(db, 'folders'),
+        where('userId', '==', currentUser.uid)
+      );
+      const foldersSnapshot = await getDocs(foldersQuery);
+      const fetchedFolders: FolderType[] = [];
+      foldersSnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.isDeleted !== true) {
+          fetchedFolders.push({
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date(),
+          } as FolderType);
+        }
+      });
       setFolders(fetchedFolders);
     } catch (error) {
       console.error('폴더 불러오기 실패:', error);
@@ -63,7 +80,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         return;
       }
 
-      await createFolderForUser(currentUser.uid, newFolderName.trim());
+      await addDoc(collection(db, 'folders'), {
+        userId: currentUser.uid,
+        name: newFolderName.trim(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isDeleted: false,
+        isFavorite: false,
+      });
       setNewFolderName('');
       setShowNewFolderInput(false);
       fetchFolders();
@@ -74,7 +98,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const toggleFavorite = async (folderId: string, currentFavorite: boolean) => {
     try {
-      await toggleFolderFavorite(folderId, currentFavorite);
+      const folderRef = doc(db, 'folders', folderId);
+      await updateDoc(folderRef, {
+        isFavorite: !currentFavorite,
+        updatedAt: serverTimestamp(),
+      });
       fetchFolders();
     } catch (error) {
       console.error('즐겨찾기 변경 실패:', error);
