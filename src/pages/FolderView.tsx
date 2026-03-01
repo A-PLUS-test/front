@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -37,10 +37,20 @@ const FolderView: React.FC = () => {
   const [movingFile, setMovingFile] = useState<{ id: string; currentFolderId?: string } | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [bottomHintMessage, setBottomHintMessage] = useState<string | null>(null);
+  const hintTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     fetchData();
   }, [folderId, currentUser]);
+
+  useEffect(() => {
+    return () => {
+      if (hintTimeoutRef.current) {
+        window.clearTimeout(hintTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const fetchData = async () => {
     if (!currentUser) return;
@@ -363,6 +373,47 @@ const FolderView: React.FC = () => {
   };
 
   const folderName = folder?.name || '무제 폴더';
+  const availableQuizSetCount = documents.filter((doc) => getQuizSetsForDocument(doc.id).length > 0).length;
+  const canCreateCombinedQuiz = availableQuizSetCount >= 2;
+  const pdfDocumentCount = documents.filter((doc) => doc.fileType === 'pdf').length;
+  const englishPdfCount = documents.filter((doc) => doc.fileType === 'pdf' && doc.language === 'en').length;
+  const canOpenVocabulary = englishPdfCount > 0;
+
+  const showBottomHint = (message: string) => {
+    setBottomHintMessage(message);
+
+    if (hintTimeoutRef.current) {
+      window.clearTimeout(hintTimeoutRef.current);
+    }
+
+    hintTimeoutRef.current = window.setTimeout(() => {
+      setBottomHintMessage(null);
+      hintTimeoutRef.current = null;
+    }, 3000);
+  };
+
+  const handleCombinedQuizAction = () => {
+    if (canCreateCombinedQuiz) {
+      setShowQuizModal(true);
+      return;
+    }
+
+    showBottomHint('문제 세트를 2개 이상 만들어주세요');
+  };
+
+  const handleVocabularyAction = () => {
+    if (canOpenVocabulary) {
+      navigate(`/folder/${folderId}/vocabulary`);
+      return;
+    }
+
+    if (pdfDocumentCount === 0) {
+      showBottomHint('생성된 단어장이 없습니다');
+      return;
+    }
+
+    showBottomHint('영어 자료에서만 단어 생성이 가능해요');
+  };
 
   return (
     <Layout>
@@ -390,9 +441,12 @@ const FolderView: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setShowQuizModal(true)}
-            disabled={documents.length === 0}
-            className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleCombinedQuizAction}
+            className={`bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-left transition-shadow ${
+              canCreateCombinedQuiz
+                ? 'hover:shadow-md'
+                : 'opacity-50 cursor-not-allowed'
+            }`}
           >
             <FileQuestion className="h-8 w-8 text-green-600 mb-3" />
             <h3 className="font-semibold text-gray-900">전체 문제 만들기</h3>
@@ -400,13 +454,12 @@ const FolderView: React.FC = () => {
           </button>
 
           <button
-            onClick={() => {
-              if (documents.filter(d => d.language === 'en').length > 0) {
-                navigate(`/folder/${folderId}/vocabulary`);
-              }
-            }}
-            disabled={documents.filter(d => d.language === 'en').length === 0}
-            className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleVocabularyAction}
+            className={`bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-left transition-shadow ${
+              canOpenVocabulary
+                ? 'hover:shadow-md'
+                : 'opacity-50 cursor-not-allowed'
+            }`}
           >
             <BookOpen className="h-8 w-8 text-purple-600 mb-3" />
             <h3 className="font-semibold text-gray-900">단어장 보기</h3>
@@ -895,6 +948,14 @@ const FolderView: React.FC = () => {
           fileName={selectedPdf.name}
           onClose={() => setSelectedPdf(null)}
         />
+      )}
+
+      {bottomHintMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="px-4 py-2 rounded-md bg-red-50 border border-red-200 text-red-600 text-sm font-medium shadow-lg">
+            {bottomHintMessage}
+          </div>
+        </div>
       )}
     </Layout>
   );
