@@ -1,7 +1,6 @@
 import type { Question, QuizSettings } from '../types';
 import { QuestionType } from '../types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { apiFetch } from './apiClient';
 
 // 더미 문제 생성 (API 실패 시 fallback)
 const generateDummyQuestions = (settings: QuizSettings): Question[] => {
@@ -53,7 +52,7 @@ export const generateQuestions = async (
   settings: QuizSettings
 ): Promise<Question[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/generate-questions`, {
+    const response = await apiFetch('/api/generate-questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ documentContent, pages, settings }),
@@ -85,7 +84,7 @@ export const gradeEssayAnswer = async (
   studentAnswer: string,
   modelAnswer: string
 ): Promise<{ score: number; feedback: string }> => {
-  const response = await fetch(`${API_BASE_URL}/api/grade-essay`, {
+  const response = await apiFetch('/api/grade-essay', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question, studentAnswer, modelAnswer }),

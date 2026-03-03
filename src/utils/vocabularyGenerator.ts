@@ -1,6 +1,5 @@
 import type { VocabularyItem } from '../types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { apiFetch } from './apiClient';
 
 // 백엔드 API를 통해 단어 사전 생성
 export const generateVocabulary = async (
@@ -8,7 +7,7 @@ export const generateVocabulary = async (
   pages: { pageNumber: number; content: string }[]
 ): Promise<VocabularyItem[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/generate-vocabulary`, {
+    const response = await apiFetch('/api/generate-vocabulary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ documentContent, pages }),
@@ -30,7 +29,7 @@ export const generateVocabulary = async (
 // 백엔드 API를 통해 단어 의미 검색
 export const lookupWord = async (word: string): Promise<string> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/lookup-word`, {
+    const response = await apiFetch('/api/lookup-word', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ word }),
