@@ -5,6 +5,9 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 import SimplePdfViewer from '../components/SimplePdfViewer';
+import DocumentLearningActions from '../components/documents/DocumentLearningActions';
+import MoveFileModal from '../components/documents/MoveFileModal';
+import QuizSetListModal from '../components/quiz/QuizSetListModal';
 import { 
   ChevronDown, 
   ChevronRight, 
@@ -15,9 +18,6 @@ import {
   FolderInput,
   Folder as FolderIcon,
   Star,
-  FileQuestion,
-  BookOpen,
-  Plus
 } from 'lucide-react';
 import type { Document, Folder, QuizSet, VocabularySet } from '../types';
 
@@ -517,46 +517,16 @@ const Documents: React.FC = () => {
                                 <Trash2 className="h-4 w-4" />
                               </button>
                               {doc.fileType === 'pdf' && (
-                                <>
-                                  {docQuizSets.length > 0 ? (
-                                    <button
-                                      onClick={() => handleViewQuizzes(doc)}
-                                      className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded border border-green-200"
-                                      title="문제 보기"
-                                    >
-                                      <FileQuestion className="h-4 w-4 inline mr-1" />
-                                      문제 보기 ({docQuizSets.length})
-                                    </button>
-                                  ) : (
-                                    <button
-                                      onClick={() => handleCreateQuiz(doc)}
-                                      className="px-3 py-1 text-xs font-medium text-[#0e8fb8] bg-[#22C7FB]/10 hover:bg-[#22C7FB]/20 rounded border border-[#22C7FB]/30"
-                                      title="문제 만들기"
-                                    >
-                                      <FileQuestion className="h-4 w-4 inline mr-1" />
-                                      문제 만들기
-                                    </button>
-                                  )}
-                                  {docVocabSets.length > 0 ? (
-                                    <button
-                                      onClick={() => handleViewVocabulary(doc)}
-                                      className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
-                                      title="단어장 보기"
-                                    >
-                                      <BookOpen className="h-4 w-4 inline mr-1" />
-                                      단어장 보기
-                                    </button>
-                                  ) : (
-                                    <button
-                                      onClick={() => handleCreateVocabulary(doc)}
-                                      className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
-                                      title="단어장 만들기"
-                                    >
-                                      <BookOpen className="h-4 w-4 inline mr-1" />
-                                      단어장 만들기
-                                    </button>
-                                  )}
-                                </>
+                                <DocumentLearningActions
+                                  quizSetCount={docQuizSets.length}
+                                  vocabularySetCount={docVocabSets.length}
+                                  isKoreanDocument={doc.language === 'ko'}
+                                  onViewQuizzes={() => handleViewQuizzes(doc)}
+                                  onCreateQuiz={() => handleCreateQuiz(doc)}
+                                  onViewVocabulary={() => handleViewVocabulary(doc)}
+                                  onCreateVocabulary={() => handleCreateVocabulary(doc)}
+                                  className="flex items-center space-x-2"
+                                />
                               )}
                             </div>
                           </>
@@ -712,46 +682,16 @@ const Documents: React.FC = () => {
                                     <Trash2 className="h-4 w-4" />
                                   </button>
                                   {doc.fileType === 'pdf' && (
-                                    <>
-                                      {docQuizSets.length > 0 ? (
-                                        <button
-                                          onClick={() => handleViewQuizzes(doc)}
-                                          className="px-3 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded border border-green-200"
-                                          title="문제 보기"
-                                        >
-                                          <FileQuestion className="h-4 w-4 inline mr-1" />
-                                          문제 보기 ({docQuizSets.length})
-                                        </button>
-                                      ) : (
-                                        <button
-                                          onClick={() => handleCreateQuiz(doc)}
-                                          className="px-3 py-1 text-xs font-medium text-[#0e8fb8] bg-[#22C7FB]/10 hover:bg-[#22C7FB]/20 rounded border border-[#22C7FB]/30"
-                                          title="문제 만들기"
-                                        >
-                                          <FileQuestion className="h-4 w-4 inline mr-1" />
-                                          문제 만들기
-                                        </button>
-                                      )}
-                                      {docVocabSets.length > 0 ? (
-                                        <button
-                                          onClick={() => handleViewVocabulary(doc)}
-                                          className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
-                                          title="단어장 보기"
-                                        >
-                                          <BookOpen className="h-4 w-4 inline mr-1" />
-                                          단어장 보기
-                                        </button>
-                                      ) : (
-                                        <button
-                                          onClick={() => handleCreateVocabulary(doc)}
-                                          className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
-                                          title="단어장 만들기"
-                                        >
-                                          <BookOpen className="h-4 w-4 inline mr-1" />
-                                          단어장 만들기
-                                        </button>
-                                      )}
-                                    </>
+                                    <DocumentLearningActions
+                                      quizSetCount={docQuizSets.length}
+                                      vocabularySetCount={docVocabSets.length}
+                                      isKoreanDocument={doc.language !== 'en'}
+                                      onViewQuizzes={() => handleViewQuizzes(doc)}
+                                      onCreateQuiz={() => handleCreateQuiz(doc)}
+                                      onViewVocabulary={() => handleViewVocabulary(doc)}
+                                      onCreateVocabulary={() => handleCreateVocabulary(doc)}
+                                      className="flex items-center space-x-2"
+                                    />
                                   )}
                                 </div>
                               </>
@@ -777,180 +717,57 @@ const Documents: React.FC = () => {
       )}
 
       {showMoveModal && movingFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">파일 이동</h3>
-            <p className="text-sm text-gray-600 mb-4">이동할 폴더를 선택하세요</p>
-            
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+        <MoveFileModal
+          movingFile={movingFile}
+          folders={folders}
+          onMove={moveFile}
+          onClose={() => {
+            setShowMoveModal(false);
+            setMovingFile(null);
+          }}
+          extraContent={
+            <>
               <button
-                onClick={() => moveFile(undefined)}
-                disabled={!movingFile.currentFolderId}
-                className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
-                  !movingFile.currentFolderId
-                    ? 'border-[#22C7FB] bg-[#22C7FB]/10 cursor-not-allowed'
-                    : 'border-gray-200 hover:border-[#22C7FB] hover:bg-[#22C7FB]/10'
-                }`}
+                onClick={() => setShowNewFolderInModal(!showNewFolderInModal)}
+                className="w-full mt-2 text-left px-4 py-2 text-sm text-[#22C7FB] hover:bg-[#22C7FB]/10 rounded-lg"
               >
-                <div className="flex items-center space-x-2">
-                  <FileText className="h-5 w-5 text-gray-600" />
-                  <span className="font-medium">기본 폴더</span>
-                  {!movingFile.currentFolderId && (
-                    <span className="text-xs text-gray-500">(현재 위치)</span>
-                  )}
+                + 새 폴더 만들기
+              </button>
+              {showNewFolderInModal && (
+                <div className="mt-2 flex space-x-2">
+                  <input
+                    type="text"
+                    value={newFolderNameInModal}
+                    onChange={(e) => setNewFolderNameInModal(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && createFolderInModal()}
+                    placeholder="폴더 이름"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
+                    autoFocus
+                  />
+                  <button
+                    onClick={createFolderInModal}
+                    className="px-4 py-2 bg-[#22C7FB] text-white rounded-md hover:bg-[#1BB0E0]"
+                  >
+                    생성
+                  </button>
                 </div>
-              </button>
-              
-              {folders.map((folder) => (
-                <button
-                  key={folder.id}
-                  onClick={() => moveFile(folder.id)}
-                  disabled={movingFile.currentFolderId === folder.id}
-                  className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
-                    movingFile.currentFolderId === folder.id
-                      ? 'border-[#22C7FB] bg-[#22C7FB]/10 cursor-not-allowed'
-                      : 'border-gray-200 hover:border-[#22C7FB] hover:bg-[#22C7FB]/10'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-5 w-5 text-[#22C7FB]" />
-                    <span className="font-medium">{folder.name}</span>
-                    {movingFile.currentFolderId === folder.id && (
-                      <span className="text-xs text-gray-500">(현재 위치)</span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-            
-            <button
-              onClick={() => setShowNewFolderInModal(!showNewFolderInModal)}
-              className="w-full mt-2 text-left px-4 py-2 text-sm text-[#22C7FB] hover:bg-[#22C7FB]/10 rounded-lg"
-            >
-              + 새 폴더 만들기
-            </button>
-            
-            {showNewFolderInModal && (
-              <div className="mt-2 flex space-x-2">
-                <input
-                  type="text"
-                  value={newFolderNameInModal}
-                  onChange={(e) => setNewFolderNameInModal(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && createFolderInModal()}
-                  placeholder="폴더 이름"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#22C7FB]"
-                  autoFocus
-                />
-                <button
-                  onClick={createFolderInModal}
-                  className="px-4 py-2 bg-[#22C7FB] text-white rounded-md hover:bg-[#1BB0E0]"
-                >
-                  생성
-                </button>
-              </div>
-            )}
-            
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowMoveModal(false);
-                  setMovingFile(null);
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-              >
-                취소
-              </button>
-            </div>
-          </div>
-        </div>
+              )}
+            </>
+          }
+        />
       )}
 
       {showQuizListModal && selectedDocForQuizList && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {selectedDocForQuizList.fileName}의 문제 목록
-              </h3>
-              <button
-                onClick={() => {
-                  setShowQuizListModal(false);
-                  setSelectedDocForQuizList(null);
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="space-y-3 max-h-96 overflow-y-auto mb-4">
-              {getQuizSetsForDocument(selectedDocForQuizList.id).map((quizSet) => (
-                <div
-                  key={quizSet.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-[#22C7FB]/50 hover:bg-[#22C7FB]/10 transition-colors cursor-pointer"
-                  onClick={() => handleViewQuiz(quizSet.id)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <FileQuestion className="h-5 w-5 text-[#22C7FB]" />
-                        <h4 className="font-medium text-gray-900">{quizSet.title}</h4>
-                      </div>
-                      <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
-                        <span>총 {quizSet.questions.length}문제</span>
-                        <span>•</span>
-                        <span>{new Date(quizSet.createdAt).toLocaleDateString()}</span>
-                      </div>
-                      {quizSet.settings && (
-                        <div className="mt-2 flex items-center space-x-3 text-xs text-gray-500">
-                          {quizSet.settings.multipleChoiceCount > 0 && (
-                            <span>객관식 {quizSet.settings.multipleChoiceCount}개</span>
-                          )}
-                          {quizSet.settings.shortAnswerCount > 0 && (
-                            <span>단답형 {quizSet.settings.shortAnswerCount}개</span>
-                          )}
-                          {quizSet.settings.essayCount > 0 && (
-                            <span>서술형 {quizSet.settings.essayCount}개</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewQuiz(quizSet.id);
-                      }}
-                      className="ml-4 px-3 py-1 text-sm font-medium text-[#0e8fb8] bg-[#22C7FB]/10 hover:bg-[#22C7FB]/20 rounded"
-                    >
-                      풀기
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-              <button
-                onClick={() => handleCreateQuiz(selectedDocForQuizList)}
-                className="flex items-center space-x-2 px-4 py-2 bg-[#22C7FB] text-white rounded-lg hover:bg-[#1BB0E0] transition-colors"
-              >
-                <Plus className="h-5 w-5" />
-                <span>추가 문제 만들기</span>
-              </button>
-              <button
-                onClick={() => {
-                  setShowQuizListModal(false);
-                  setSelectedDocForQuizList(null);
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-              >
-                닫기
-              </button>
-            </div>
-          </div>
-        </div>
+        <QuizSetListModal
+          document={selectedDocForQuizList}
+          quizSets={getQuizSetsForDocument(selectedDocForQuizList.id)}
+          onClose={() => {
+            setShowQuizListModal(false);
+            setSelectedDocForQuizList(null);
+          }}
+          onViewQuiz={handleViewQuiz}
+          onCreateQuiz={handleCreateQuiz}
+        />
       )}
     </Layout>
   );
