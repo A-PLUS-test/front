@@ -51,11 +51,8 @@ const Login: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#22C7FB]/10 to-[#22C7FB]/20 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
         <div>
-          <div className="flex justify-center">
-            <img src="/aplus_icon.png" alt="APLUS" className="h-12 w-12" />
-          </div>
           <h2 className="mt-6 text-center">
-            <span className="text-3xl logo-font" style={{ color: '#22C7FB' }}>APLUS</span>
+            <span className="text-3xl logo-font" style={{ color: '#22C7FB' }}>BPLUS</span>
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             로그인하여 학습을 시작하세요

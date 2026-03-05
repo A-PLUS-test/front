@@ -20,8 +20,7 @@ const About: React.FC = () => {
       <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm shadow-sm z-50">
         <div className="w-full px-[40px] py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <img src="/aplus_icon.png" alt="APLUS" className="h-10 w-10" />
-            <span className="text-3xl logo-font" style={{ color: '#22C7FB' }}>APLUS</span>
+            <img src="/bplus_text.png" alt="BPLUS" className="h-8" />
           </div>
           {currentUser ? (
             <Link
@@ -71,7 +70,7 @@ const About: React.FC = () => {
             <div className="overflow-hidden">
               <img
                 src="/about_img/monitor_img.png"
-                alt="APLUS 대시보드"
+                alt="BPLUS 대시보드"
                 className="w-full block"
                 style={{ clipPath: 'inset(0 0 5% 0)' }}
               />
@@ -84,7 +83,7 @@ const About: React.FC = () => {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-4">
-            <span className="logo-font" style={{ color: '#22C7FB' }}>APLUS</span>의
+            <span className="logo-font" style={{ color: '#22C7FB' }}>BPLUS</span>의
           </h2>
           <h2 className="text-4xl font-bold text-center mb-16">주요기능</h2>
           
@@ -264,8 +263,7 @@ const About: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <img src="/aplus_icon.png" alt="APLUS" className="h-10 w-10" />
-                <span className="text-2xl logo-font" style={{ color: '#22C7FB' }}>APLUS</span>
+                <img src="/bplus_text.png" alt="BPLUS" className="h-8" />
               </div>
               <p className="text-sm">학습의 새로운 기준</p>
             </div>
@@ -287,7 +285,7 @@ const About: React.FC = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-sm text-center">
-            © 2024 APLUS. All rights reserved.
+            © 2024 BPLUS. All rights reserved.
           </div>
         </div>
       </footer>
