@@ -116,8 +116,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* 로고 */}
         <div className="p-6 border-b border-gray-200">
           <Link to="/home" className="flex items-center space-x-3">
-            <img src="/aplus_icon.png" alt="APLUS" className="h-10 w-10" />
-            <span className="text-2xl logo-font" style={{ color: '#22C7FB' }}>APLUS</span>
+            <img src="/bplus_text.png" alt="BPLUS" className="h-8" />
           </Link>
         </div>
 

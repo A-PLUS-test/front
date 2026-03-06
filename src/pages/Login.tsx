@@ -53,11 +53,8 @@ const Login: React.FC = () => {
     <AuthFormCard
       header={
         <div>
-          <div className="flex justify-center">
-            <img src="/aplus_icon.png" alt="APLUS" className="h-12 w-12" />
-          </div>
           <h2 className="mt-6 text-center">
-            <span className="text-3xl logo-font" style={{ color: '#22C7FB' }}>APLUS</span>
+            <span className="text-3xl logo-font" style={{ color: '#22C7FB' }}>BPLUS</span>
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">로그인하여 학습을 시작하세요</p>
         </div>
